@@ -1,0 +1,130 @@
+// Color variables
+$app-color-main: #81C14B;
+$app-color-accent: #2F471E;
+$background-color: #F8F8F8;
+$text-color-main: #090E06;
+
+// Mixins
+@mixin flex-settings ($direction, $justify, $align) {
+  display: flex;
+  flex-direction: $direction;
+  justify-content: $justify;
+  align-items: $align;
+}
+
+@mixin text-hover($color) {
+  display: inline-block;
+  position: relative;
+  color: $color;
+
+  &::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    left: 0;
+    bottom: 0;
+    background-color: $color;
+    transform: scaleX(0);
+    transform-origin: bottom left;
+    transition: transform 0.3s ease;
+  }
+
+  &:hover::after {
+    transform: scaleX(1);
+  }
+}
+
+// Main styles
+* {
+  padding: 0;
+  margin: 0;
+  font-family: "Montserrat", sans-serif;
+}
+
+body {
+  background-color: $background-color;
+  color: $text-color-main;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+header {
+  background-color: $app-color-main;
+  height: 100%;
+  width: 100%;
+  @include flex-settings(row, center, center);
+}
+
+nav {
+  width: 100%;
+  height: 100%;
+}
+
+.navigation-links {
+  @include flex-settings(row, space-around, center);
+}
+
+.navigation-links li {
+  list-style: none;
+  color: $text-color-main;
+}
+
+.navigation-links li a {
+  text-decoration: none;
+  color: $text-color-main;
+  padding-bottom: 5px;
+  @include text-hover($text-color-main);
+}
+
+.navigation-links.footer {
+  @include flex-settings(column, center, flex-start);
+}
+
+.navigation-links.footer li {
+  color: $background-color;
+}
+
+.navigation-links.footer li a {
+  color: $background-color;
+  @include text-hover($background-color);
+}
+
+h1 {
+  font-size: 1.1rem;
+}
+
+a {
+  font-style: none;
+}
+
+img {
+  width: 50%;
+}
+
+footer {
+  background-color: $app-color-accent;
+  color: $background-color;
+  height: 100%;
+  width: 100%;
+  @include flex-settings(row, center, center);
+}
+
+// index.html
+.logo-container {
+  width: 100%;
+  height: 100%;
+  font-weight: 700;
+  font-size: 1.3rem;
+  color: $app-color-accent;
+  @include flex-settings(row, flex-start, center)
+}
+
+.logo-container img {
+  width: 10%;
+  margin: 10px 15px;
+}
+
+.logo-container.footer {
+  color: $background-color;
+}
