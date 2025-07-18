@@ -13,12 +13,11 @@ body {
 
 header {
   background-color: #81C14B;
-  height: 100%;
-  width: 100%;
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;
+  padding: 0 30px;
 }
 
 nav {
@@ -29,13 +28,14 @@ nav {
 .navigation-links {
   display: flex;
   flex-direction: row;
-  justify-content: space-around;
+  justify-content: end;
   align-items: center;
 }
 
 .navigation-links li {
   list-style: none;
   color: #090E06;
+  margin: 0 20px;
 }
 
 .navigation-links li a {
@@ -110,8 +110,7 @@ img {
 footer {
   background-color: #2F471E;
   color: #F8F8F8;
-  height: 100%;
-  width: 100%;
+  padding: 15px 30px;
   display: flex;
   flex-direction: row;
   justify-content: center;

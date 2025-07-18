@@ -51,9 +51,8 @@ body {
 
 header {
   background-color: $app-color-main;
-  height: 100%;
-  width: 100%;
   @include flex-settings(row, center, center);
+  padding: 0 30px;
 }
 
 nav {
@@ -62,12 +61,13 @@ nav {
 }
 
 .navigation-links {
-  @include flex-settings(row, space-around, center);
+  @include flex-settings(row, end, center);
 }
 
 .navigation-links li {
   list-style: none;
   color: $text-color-main;
+  margin: 0 20px;
 }
 
 .navigation-links li a {
@@ -105,8 +105,7 @@ img {
 footer {
   background-color: $app-color-accent;
   color: $background-color;
-  height: 100%;
-  width: 100%;
+  padding: 15px 30px;
   @include flex-settings(row, center, center);
 }
 
