@@ -1,18 +1,23 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
-import ejs from "ejs";
 import { readFile } from "fs/promises";
+import ejs from "ejs";
 import path from "path";
+import { authRoute } from "./routes/authRoute.ts";
+import { taskRoute } from "./routes/tasksRoute.ts";
 
-const app = new Hono();
+export const app = new Hono();
 app.use("*", serveStatic({ root: "./public" }));
 
+app.route("/user", authRoute);
+app.route("/task", taskRoute);
+
 export async function renderPage(view: string, data: any = {}) {
-  const bodyTemplate = await readFile(path.join("views", view), "utf-8");
+  const bodyTemplate = await readFile(path.join("public/views", view), "utf-8");
 
   const layoutTemplate = await readFile(
-    path.join("views", "layout.ejs"),
+    path.join("public/views", "layout.ejs"),
     "utf-8"
   );
 

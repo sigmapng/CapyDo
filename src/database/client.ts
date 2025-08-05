@@ -1,10 +1,17 @@
 import "dotenv/config";
-import postgres from "postgres";
+import { Client } from "pg";
 
-export const sql = postgres({
+export const client = new Client({
   host: process.env.DB_HOST,
   port: Number(process.env.DB_PORT),
-  username: process.env.DB_USER,
+  user: process.env.DB_USER,
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
 });
+
+await client.connect();
+
+client.on("error", (err) => {
+  console.error("something bad has happened!", err.stack);
+});
+

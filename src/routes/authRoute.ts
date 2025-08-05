@@ -1,13 +1,19 @@
 import { Hono } from "hono";
-import { ToDoService } from "../services/toDoService.ts";
-import { type User } from "../interfaces/user.ts";
+import { renderPage } from "../index.ts";
 
-const authRoute = new Hono();
-const todoService = new ToDoService();
+export const authRoute = new Hono();
 
 // authRoute CRUD
-authRoute.get("/login/", (c) => c.text("Login into Account"));
+authRoute.get("/login", async (c) => {
+  const html = await renderPage("login.ejs", { title: "Login" });
+  return c.html(html);
+});
 
-authRoute.get("user/", (c) => c.text("Show User Profile"));
-authRoute.put("user/:id", (c) => c.text("Update Profile"));
-authRoute.delete("user/:id", (c) => c.text("Delete User Profile"));
+authRoute.get("/", async (c) => {
+  const page = await renderPage("user-account.ejs", { title: "Account" });
+  return c.html(page);
+});
+
+/* authRoute.put("/:id", (c) => c.text("Update Profile"));
+
+authRoute.delete("/:id", (c) => c.text("Delete User Profile")); */
