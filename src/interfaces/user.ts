@@ -6,7 +6,7 @@ export interface User {
 }
  
 export interface CreateUserRequest {
-  firstName?: string;
+  firstName: string;
   userName: string;
   password: string;
 }

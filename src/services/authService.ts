@@ -6,20 +6,25 @@ import type {
 } from "../interfaces/user.ts";
 
 export class authService {
-  getUserInfo(user: User) {
-    client.query(`SELECT * FROM users WHERE username === ${user.userName}`);
+  async getUserInfo(user: User) {
+    const result = await client.query(
+      "SELECT * FROM public.users WHERE username = $1",
+      [user.userName]
+    );
+    return result.rows[0];
   }
 
-  createUser(create: CreateUserRequest) {
-    client.query(`
-      INSERT INTO users (username, password, name)
-      VALUES ${create.userName}, ${create.password}, ${create.firstName}`);
+  async createUser(create: CreateUserRequest) {
+    await client.query(
+      "INSERT INTO public.users (username, password, name) VALUES ($1, $2, $3)",
+      [create.userName, create.password, create.firstName]
+    );
   }
 
-  changeUserInfo(update: UpdateUserRequest) {
-    client.query(`
-      UPDATE users
-      SET ${update.firstName}, ${update.password}, 
-      WHERE ${update.userName}`);
+  async changeUserInfo(update: UpdateUserRequest) {
+    await client.query(
+      "UPDATE public.users SET name = $1, password = $2 WHERE username = $3",
+      [update.firstName, update.password, update.userName]
+    );
   }
 }

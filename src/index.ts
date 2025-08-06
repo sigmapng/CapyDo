@@ -10,8 +10,8 @@ import { taskRoute } from "./routes/tasksRoute.ts";
 export const app = new Hono();
 app.use("*", serveStatic({ root: "./public" }));
 
-app.route("/user", authRoute);
-app.route("/task", taskRoute);
+app.route("/", authRoute);
+app.route("/", taskRoute);
 
 export async function renderPage(view: string, data: any = {}) {
   const bodyTemplate = await readFile(path.join("public/views", view), "utf-8");
@@ -26,8 +26,8 @@ export async function renderPage(view: string, data: any = {}) {
 }
 
 app.get("/", async (c) => {
-  const html = await renderPage("index.ejs", { title: "Home" });
-  return c.html(html);
+  const page = await renderPage("index.ejs", { title: "Home" });
+  return c.html(page);
 });
 
 serve(

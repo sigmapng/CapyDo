@@ -1,19 +1,46 @@
 import { Hono } from "hono";
 import { renderPage } from "../index.ts";
+import { authService } from "../services/authService.ts";
+import type {
+  User,
+  CreateUserRequest,
+  UpdateUserRequest,
+} from "../interfaces/user.ts";
 
+const service = new authService();
 export const authRoute = new Hono();
 
-// authRoute CRUD
-authRoute.get("/login", async (c) => {
-  const html = await renderPage("login.ejs", { title: "Login" });
-  return c.html(html);
-});
-
-authRoute.get("/", async (c) => {
-  const page = await renderPage("user-account.ejs", { title: "Account" });
+authRoute.get("/signup", async (c) => {
+  const page = await renderPage("sign_up.ejs", { title: "Sign Up" });
   return c.html(page);
 });
 
-/* authRoute.put("/:id", (c) => c.text("Update Profile"));
+authRoute.post("/signup", async (c) => {
+  const body = await c.req.parseBody();
 
-authRoute.delete("/:id", (c) => c.text("Delete User Profile")); */
+  const newUser: CreateUserRequest = {
+    userName: String(body.username),
+    password: String(body.password),
+    firstName: String(body.name),
+  };
+
+  const existing = await service.getUserInfo({
+    userName: newUser.userName,
+  } as User);
+
+  if (existing) {
+    return c.text("Username already taken");
+  }
+
+  // Create new user
+  await service.createUser(newUser);
+  return c.redirect("/", 301);
+});
+
+/* authRoute.get("/", async (c) => {
+  const page = await renderPage("", { title: "" });
+});
+
+authRoute.get("/", async (c) => {
+  const page = await renderPage("", { title: "" });
+}); */
