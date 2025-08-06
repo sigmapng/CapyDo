@@ -11,10 +11,10 @@ export interface CreateUserRequest {
   password: string;
 }
 
-/* export interface LoginRequest {
+export interface LoginUserRequest {
   userName: string;
   password: string;
-} */
+}
 
 export interface UpdateUserRequest {
   firstName?: string;

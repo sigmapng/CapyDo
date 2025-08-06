@@ -3,12 +3,13 @@ import type {
   User,
   CreateUserRequest,
   UpdateUserRequest,
+  LoginUserRequest,
 } from "../interfaces/user.ts";
 
 export class authService {
   async getUserInfo(user: User) {
     const result = await client.query(
-      "SELECT * FROM public.users WHERE username = $1",
+      "SELECT id, username, password, name FROM public.users WHERE username = $1",
       [user.userName]
     );
     return result.rows[0];
@@ -18,6 +19,13 @@ export class authService {
     await client.query(
       "INSERT INTO public.users (username, password, name) VALUES ($1, $2, $3)",
       [create.userName, create.password, create.firstName]
+    );
+  }
+
+  async loginUser(login: LoginUserRequest) {
+    await client.query(
+      "SELECT username, password FROM public.users WHERE username = $1",
+      [login.userName]
     );
   }
 
