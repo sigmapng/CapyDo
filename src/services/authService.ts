@@ -4,6 +4,7 @@ import type {
   CreateUserRequest,
   UpdateUserRequest,
   LoginUserRequest,
+  DeleteUserRequest,
 } from "../interfaces/user.ts";
 
 export class authService {
@@ -11,6 +12,14 @@ export class authService {
     const result = await client.query(
       "SELECT id, username, password, name FROM public.users WHERE username = $1",
       [user.userName]
+    );
+    return result.rows[0];
+  }
+
+  async getUserById(id: string) {
+    const result = await client.query(
+      "SELECT * FROM public.users WHERE id = $1",
+      [id]
     );
     return result.rows[0];
   }
@@ -34,5 +43,10 @@ export class authService {
       "UPDATE public.users SET name = $1, password = $2 WHERE username = $3",
       [update.firstName, update.password, update.userName]
     );
+  }
+
+  async deleteUser(remove: DeleteUserRequest) {
+    await client.query("DELETE FROM public.users WHERE username = $1", 
+      [remove.username]);
   }
 }

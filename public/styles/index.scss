@@ -69,6 +69,7 @@ nav {
 main {
   flex: 1 0 auto;
   background-color: $background-color;
+  @include flex-settings(column, center, center);
 }
 
 h1 {

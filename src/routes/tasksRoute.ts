@@ -14,13 +14,13 @@ export const taskRoute = new Hono();
 
 // Tasks
 taskRoute.get("/tasks", async (c) => {
-  const page = await renderPage("tasks.ejs", { title: "Tasks" });
+  const page = await renderPage(c, "tasks.ejs", { title: "Tasks" });
   return c.html(page);
 });
 
 // Create Task
 taskRoute.get("/newtask", async (c) => {
-  const page = await renderPage("task_id.ejs", { title: "Tasks" });
+  const page = await renderPage(c, "task_id.ejs", { title: "Tasks" });
   return c.html(page);
 });
 
@@ -41,7 +41,7 @@ taskRoute.post("/newtask", async (c) => {
 
 //Update Task
 taskRoute.get("/task:id", async (c) => {
-  const page = await renderPage("task_id.ejs", { title: "Tasks" });
+  const page = await renderPage(c, "task_id.ejs", { title: "Tasks" });
   return c.html(page);
 });
 

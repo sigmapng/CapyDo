@@ -7,6 +7,7 @@ import type {
   CreateUserRequest,
   UpdateUserRequest,
   LoginUserRequest,
+  DeleteUserRequest,
 } from "../interfaces/user.ts";
 
 const service = new authService();
@@ -14,7 +15,7 @@ export const authRoute = new Hono();
 
 // Sign Up
 authRoute.get("/signup", async (c) => {
-  const page = await renderPage("sign_up.ejs", { title: "Sign Up" });
+  const page = await renderPage(c, "sign_up.ejs", { title: "Sign Up" });
   return c.html(page);
 });
 
@@ -47,7 +48,7 @@ authRoute.post("/signup", async (c) => {
     path: "/",
     secure: true,
     httpOnly: true,
-    maxAge: 60 * 60 * 24, //1 day
+    maxAge: 30 * 86.4, //1 month
     sameSite: "Strict",
   });
 
@@ -56,7 +57,7 @@ authRoute.post("/signup", async (c) => {
 
 // Log In
 authRoute.get("/login", async (c) => {
-  const page = await renderPage("login.ejs", { title: "Log In" });
+  const page = await renderPage(c, "login.ejs", { title: "Log In" });
   return c.html(page);
 });
 
@@ -87,7 +88,7 @@ authRoute.post("/login", async (c) => {
   const loggedIn = await service.getUserInfo({
     userName: userLoginRequest.userName,
   } as User);
-  console.log("Logged in user:", loggedIn);
+
   const userId = loggedIn.id;
 
   await setCookie(c, "cookie", userId, {
@@ -97,11 +98,78 @@ authRoute.post("/login", async (c) => {
     maxAge: 60 * 60 * 24, //1 day
     sameSite: "Strict",
   });
+
   return c.redirect("/account", 301);
 });
 
-// Update
+// Account
 authRoute.get("/account", async (c) => {
-  const page = await renderPage("account.ejs", { title: "Update information" });
+  const userId = await getCookie(c, "cookie");
+
+  if (!userId) {
+    return c.redirect("/login");
+  }
+
+  const user = await service.getUserById(userId);
+  const page = await renderPage(c, "account.ejs", {
+    title: "Account",
+    name: user.name,
+  });
   return c.html(page);
+});
+
+/* // Update
+authRoute.get("/account", async (c) => {
+  const page = await renderPage(c, "account.ejs", {
+    title: "Update information",
+  });
+  return c.html(page);
+});
+
+// Change route for this and create ejs file
+authRoute.post("/account", async (c) => {
+  const body = await c.req.parseBody();
+
+  const userUpdated: UpdateUserRequest = {
+    firstName: String(body.firstName),
+    password: String(body.password),
+    userName: String(body.username),
+  };
+
+  const existing = await service.getUserInfo({
+    userName: userUpdated.userName,
+  } as User);
+
+  if (userUpdated.userName !== existing.userName) {
+    return c.text("User with this name doesn't exist");
+  }
+
+  await service.changeUserInfo(userUpdated);
+  return c.redirect("/account", 301);
+}); */
+
+// Log Out
+authRoute.post("/account", async (c) => {
+  deleteCookie(c, "cookie", { path: "/" });
+  return c.redirect("/", 301);
+});
+
+// Delete User
+authRoute.delete("/account", async (c) => {
+  const userId = await getCookie(c, "cookie");
+  console.log(userId)
+
+  if (!userId) {
+    return c.redirect("/");
+  }
+
+  const user = await service.getUserById(userId);
+  const userRemove: DeleteUserRequest = {
+    username: user.username,
+  };
+  console.log(userRemove.username)
+
+  deleteCookie(c, "cookie", { path: "/" });
+  await service.deleteUser(userRemove);
+  return c.json({ redirect: "/" });
 });

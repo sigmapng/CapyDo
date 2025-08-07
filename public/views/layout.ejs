@@ -24,25 +24,23 @@
 
     <nav>
       <ul class="navigation-links">
-        <% if(false) { %>
-          <li>
-            <a href="">About Us</a>
-          </li>
+        <% if(isLoggedIn) { %>
           <li>
             <a href="/tasks">Tasks</a>
           </li>
           <li>
-            <a href="/login">Log In</a>
+            <a href="/account">Account</a>
           </li>
-          <li>
-            <a href="/signup">Sign Up</a>
-          </li>
+
           <% } else { %>
             <li>
-              <a href="/tasks">Tasks</a>
+              <a href="">About Us</a>
             </li>
             <li>
-              <a href="/account">Account</a>
+              <a href="/login">Log In</a>
+            </li>
+            <li>
+              <a href="/signup">Sign Up</a>
             </li>
             <% } %>
       </ul>
