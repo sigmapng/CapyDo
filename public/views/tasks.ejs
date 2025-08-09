@@ -1,4 +1,49 @@
+<h3>All Tasks</h3>
 <a href="/task/create">Create a Task</a>
-<a href="/tasks/all">See All Tasks</a>
-<a href="/task/update">Update a Task</a>
-<a href="">Delete a Task</a>
+<% tasks.forEach(t=> { %>
+  <div class="task">
+    <p>Task name: <%= t.name %>
+    </p>
+    <p>Task status: <%= t.status %>
+    </p>
+    <p>Task importance: <%= t.importance %>
+    </p>
+    <p>Task due to: <%= t.due_to %>
+    </p>
+    <button id="update btn" onclick="updateTask()">Update Task</button>
+    <button id="delete btn" onclick="deleteTask()">Delete Task</button>
+  </div>
+  <% }) %>
+
+    <script>
+      function updateTask() {
+        fetch("/task/update", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          }
+        }).then(response => {
+          if (response.ok) {
+            window.location.href = "/";
+          }
+        }).catch(error => {
+          console.error("Update error:", error);
+        });
+      }
+
+      function deleteTask() {
+        fetch("/tasks", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          }
+        }).then(async (response) => {
+          const data = await response.json();
+          if (data.redirect) {
+            window.location.href = data.redirect;
+          }
+        }).catch(error => {
+          console.error("Deleting error:", error);
+        });
+      }
+    </script>

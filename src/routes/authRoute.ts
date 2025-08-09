@@ -44,7 +44,7 @@ authRoute.post("/signup", async (c) => {
   console.log("Created user:", created);
   const userId = created.id;
 
-  await setCookie(c, "cookie", userId, {
+  await setCookie(c, "userId", userId, {
     path: "/",
     secure: true,
     httpOnly: true,
@@ -91,7 +91,7 @@ authRoute.post("/login", async (c) => {
 
   const userId = loggedIn.id;
 
-  await setCookie(c, "cookie", userId, {
+  await setCookie(c, "userId", userId, {
     path: "/",
     secure: true,
     httpOnly: true,
@@ -104,7 +104,7 @@ authRoute.post("/login", async (c) => {
 
 // Account
 authRoute.get("/account", async (c) => {
-  const userId = await getCookie(c, "cookie");
+  const userId = await getCookie(c, "userId");
 
   if (!userId) {
     return c.redirect("/login");
@@ -149,13 +149,13 @@ authRoute.put("/account-settings", async (c) => {
 
 // Log Out
 authRoute.post("/account", async (c) => {
-  deleteCookie(c, "cookie", { path: "/" });
+  deleteCookie(c, "userId", { path: "/" });
   return c.redirect("/", 301);
 });
 
 // Delete User
 authRoute.delete("/account", async (c) => {
-  const userId = await getCookie(c, "cookie");
+  const userId = await getCookie(c, "userId");
   console.log(userId);
 
   if (!userId) {
@@ -168,7 +168,7 @@ authRoute.delete("/account", async (c) => {
   };
   console.log(userRemove.username);
 
-  deleteCookie(c, "cookie", { path: "/" });
+  deleteCookie(c, "userId", { path: "/" });
   await service.deleteUser(userRemove);
   return c.json({ redirect: "/" });
 });

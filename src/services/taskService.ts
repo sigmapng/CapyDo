@@ -9,15 +9,15 @@ import type {
 export class taskService {
   async getTaskInfo(task: Task) {
     const result = await client.query(
-      "SELECT * FROM public.task WHERE name = $1",
+      "SELECT id, name, status, importance, due_to, date_created, user_id FROM public.task WHERE name = $1",
       [task.name]
     );
     return result.rows[0];
   }
 
-  async getTasksByUserId(user_id :number) {
+  async getTasksByUserId(user_id: number) {
     const result = await client.query(
-      "SELECT * FROM public.task WHERE user_id = $1",
+      "SELECT id, name, status, importance, due_to, date_created, user_id FROM public.task WHERE user_id = $1",
       [user_id]
     );
     return result.rows;
@@ -44,8 +44,6 @@ export class taskService {
   }
 
   async deleteTask(remove: DeleteTaskRequest) {
-    await client.query("DELETE FROM public.task WHERE name = $1", [
-      remove.name,
-    ]);
+    await client.query("DELETE FROM public.task WHERE id = $1", [remove.id]);
   }
 }

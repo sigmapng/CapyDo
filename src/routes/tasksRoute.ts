@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { html } from "hono/html";
 import { renderPage } from "../index.ts";
 import { taskService } from "../services/taskService.ts";
 import type {
@@ -8,14 +7,25 @@ import type {
   UpdateTaskRequest,
   DeleteTaskRequest,
 } from "../interfaces/task.ts";
-import { getCookie } from "hono/cookie";
+import { getCookie, setCookie } from "hono/cookie";
 
 const service = new taskService();
 export const taskRoute = new Hono();
 
 // Tasks
 taskRoute.get("/tasks", async (c) => {
-  const page = await renderPage(c, "tasks.ejs", { title: "Tasks" });
+  const userId = await getCookie(c, "userId");
+
+  if (!userId) {
+    return c.redirect("/login");
+  }
+
+  const tasks = await service.getTasksByUserId(Number(userId));
+  const page = await renderPage(c, "tasks.ejs", {
+    title: "Tasks",
+    tasks,
+  });
+
   return c.html(page);
 });
 
@@ -33,39 +43,24 @@ taskRoute.post("/task/create", async (c) => {
     status: String(body.status),
     importance: String(body.importance),
     dueTo: new Date(String(body.due_to)),
-    userId: Number(getCookie(c, "cookie")),
+    userId: Number(getCookie(c, "userId")),
   };
 
   await service.createTask(newTask);
-  return c.redirect("/tasks/all", 301);
-});
 
-// See all Tasks
-taskRoute.get("/tasks/all", async (c) => {
-  const userId = await getCookie(c, "cookie");
-
-  if (!userId) {
-    return c.redirect("/login");
-  }
-
-  const tasks = await service.getTasksByUserId(Number(userId));
-  const page = await renderPage(c, "tasks_all.ejs", {
-    title: "Tasks",
-    tasks,
+  await setCookie(c, "taskName", newTask.name, {
+    path: "/",
+    secure: true,
+    httpOnly: true,
+    maxAge: 30 * 86.4, //1 month
+    sameSite: "Strict",
   });
 
-  return c.html(page);
+  return c.redirect("/tasks", 301);
 });
 
 //Update Task
-taskRoute.get("/task/update", async (c) => {
-  const name = await c.req.param();
-  console.log(name);
-  const page = await renderPage(c, "task_update.ejs", { title: "Task update" });
-  return c.html(page);
-});
-
-taskRoute.put("/task/update", async (c) => {
+taskRoute.put("/tasks", async (c) => {
   const body = await c.req.parseBody();
 
   const taskUpdated: UpdateTaskRequest = {
@@ -88,13 +83,20 @@ taskRoute.put("/task/update", async (c) => {
 });
 
 // Delete Task
-taskRoute.delete("/task", async (c) => {
-  const body = await c.req.parseBody();
+taskRoute.delete("/tasks", async (c) => {
+  const task = await getCookie(c, "taskName");
+  console.log(task);
+  const taskName = await service.getTaskInfo({
+    name: task,
+  } as Task);
+
+  const taskId = taskName.id;
 
   const taskRemove: DeleteTaskRequest = {
-    name: String(body.name),
+    id: Number(taskId),
   };
+  console.log(taskId);
 
   await service.deleteTask(taskRemove);
-  return c.redirect("/tasks", 301);
+  return c.json({ redirect: "/tasks" });
 });

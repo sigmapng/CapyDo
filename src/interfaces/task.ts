@@ -24,5 +24,5 @@ export interface UpdateTaskRequest {
 }
 
 export interface DeleteTaskRequest {
-  name: string;
+  id: number;
 }

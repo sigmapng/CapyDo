@@ -23,7 +23,7 @@ export async function renderPage(c: Context, view: string, data: any = {}) {
     "utf-8"
   );
 
-  const isLoggedIn = Boolean(getCookie(c, "cookie"));
+  const isLoggedIn = Boolean(getCookie(c, "userId"));
 
   const body = ejs.render(bodyTemplate, data);
   return ejs.render(layoutTemplate, { ...data, body, isLoggedIn });
