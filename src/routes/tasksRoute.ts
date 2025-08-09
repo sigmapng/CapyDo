@@ -52,7 +52,7 @@ taskRoute.post("/task/create", async (c) => {
     path: "/",
     secure: true,
     httpOnly: true,
-    maxAge: 30 * 86.4, //1 month
+    maxAge: 30 * 24 * 60 * 60, //1 month
     sameSite: "Strict",
   });
 

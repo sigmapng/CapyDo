@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import bcrypt from "bcrypt";
 import { renderPage } from "../index.ts";
 import { authService } from "../services/authService.ts";
 import { getCookie, setCookie, deleteCookie } from "hono/cookie";
@@ -22,9 +23,11 @@ authRoute.get("/signup", async (c) => {
 authRoute.post("/signup", async (c) => {
   const body = await c.req.parseBody();
 
+  const hash = await bcrypt.hash(String(body.password), 10);
+
   const newUser: CreateUserRequest = {
     userName: String(body.username),
-    password: String(body.password),
+    password: hash,
     firstName: String(body.name),
   };
 
@@ -48,7 +51,7 @@ authRoute.post("/signup", async (c) => {
     path: "/",
     secure: true,
     httpOnly: true,
-    maxAge: 30 * 86.4, //1 month
+    maxAge: 30 * 24 * 60 * 60, //1 month
     sameSite: "Strict",
   });
 
@@ -74,10 +77,9 @@ authRoute.post("/login", async (c) => {
     password: userLoginRequest.password,
   } as User);
 
-  if (
-    existing.userName !== userLoginRequest.userName &&
-    existing.password !== userLoginRequest.password
-  ) {
+  const hash = existing.password;
+
+  if (!bcrypt.compareSync(userLoginRequest.password, hash)) {
     return c.text(
       "There is no user registered with this username or the password is incorrect"
     );
