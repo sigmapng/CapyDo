@@ -15,6 +15,14 @@ export class taskService {
     return result.rows[0];
   }
 
+  async getTasksByUserId(user_id :number) {
+    const result = await client.query(
+      "SELECT * FROM public.task WHERE user_id = $1",
+      [user_id]
+    );
+    return result.rows;
+  }
+
   async createTask(create: CreateTaskRequest) {
     await client.query(
       "INSERT INTO public.task (name, status, importance, due_to, user_id) VALUES ($1, $2, $3, $4, $5)",

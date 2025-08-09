@@ -46,7 +46,8 @@ export class authService {
   }
 
   async deleteUser(remove: DeleteUserRequest) {
-    await client.query("DELETE FROM public.users WHERE username = $1", 
-      [remove.username]);
+    await client.query("DELETE FROM public.users WHERE username = $1", [
+      remove.username,
+    ]);
   }
 }

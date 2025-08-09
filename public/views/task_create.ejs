@@ -1,8 +1,8 @@
-<form action="/newtask" method="post" class="login-form">
-  <h3>Log In</h3>
+<form action="/task/create" method="post" class="login-form">
+  <h3>Create a task</h3>
   <div>
     <label for="name">Enter a task's name</label>
-    <input type="text" name="name" id="name" required>
+    <input type="text" name="name" id="name" autocomplete="off" required>
   </div>
   <div>
     <p>Pick task's status</p>
@@ -13,7 +13,7 @@
     <label for="in-progress">"in progress"</label>
 
     <input type="radio" name="status" id="completed" value="completed">
-    <label for="">completed</label>
+    <label for="completed">completed</label>
 
     <input type="radio" name="status" id="canceled" value="canceled">
     <label for="canceled">canceled</label>

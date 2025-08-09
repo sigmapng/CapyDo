@@ -15,3 +15,6 @@ console.log("client has connected");
 client.on("error", (err) => {
   console.error("something bad has happened!", err.stack);
 });
+
+/* await client.end()
+console.log("client has disconnected"); */

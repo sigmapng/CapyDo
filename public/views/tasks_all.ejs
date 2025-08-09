@@ -1,0 +1,14 @@
+<h3>All Tasks</h3>
+<% tasks.forEach(t=> { %>
+  <br>
+  <div class="task">
+    <p>Task name: <%= t.name %>
+    </p>
+    <p>Task status: <%= t.status %>
+    </p>
+    <p>Task importance: <%= t.importance %>
+    </p>
+    <p>Task due to: <%= t.due_to %>
+    </p>
+  </div> <br>
+  <% }) %>

@@ -95,7 +95,7 @@ authRoute.post("/login", async (c) => {
     path: "/",
     secure: true,
     httpOnly: true,
-    maxAge: 60 * 60 * 24, //1 day
+    maxAge: 60 * 60 * 24 * 30, //1 month
     sameSite: "Strict",
   });
 
@@ -118,16 +118,15 @@ authRoute.get("/account", async (c) => {
   return c.html(page);
 });
 
-/* // Update
-authRoute.get("/account", async (c) => {
-  const page = await renderPage(c, "account.ejs", {
+// Update
+authRoute.get("/account-settings", async (c) => {
+  const page = await renderPage(c, "account_settings.ejs", {
     title: "Update information",
   });
   return c.html(page);
 });
 
-// Change route for this and create ejs file
-authRoute.post("/account", async (c) => {
+authRoute.put("/account-settings", async (c) => {
   const body = await c.req.parseBody();
 
   const userUpdated: UpdateUserRequest = {
@@ -146,7 +145,7 @@ authRoute.post("/account", async (c) => {
 
   await service.changeUserInfo(userUpdated);
   return c.redirect("/account", 301);
-}); */
+});
 
 // Log Out
 authRoute.post("/account", async (c) => {
@@ -157,7 +156,7 @@ authRoute.post("/account", async (c) => {
 // Delete User
 authRoute.delete("/account", async (c) => {
   const userId = await getCookie(c, "cookie");
-  console.log(userId)
+  console.log(userId);
 
   if (!userId) {
     return c.redirect("/");
@@ -167,7 +166,7 @@ authRoute.delete("/account", async (c) => {
   const userRemove: DeleteUserRequest = {
     username: user.username,
   };
-  console.log(userRemove.username)
+  console.log(userRemove.username);
 
   deleteCookie(c, "cookie", { path: "/" });
   await service.deleteUser(userRemove);

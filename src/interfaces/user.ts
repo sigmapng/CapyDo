@@ -4,7 +4,7 @@ export interface User {
   userName: string;
   password: string;
 }
- 
+
 export interface CreateUserRequest {
   firstName: string;
   userName: string;
