@@ -1,0 +1,193 @@
+// Color variables
+$app-color-main: #81C14B;
+$app-color-accent: #2F471E;
+$background-color: #F8F8F8;
+$text-color-main: #090E06;
+
+// Mixins
+@mixin flex-settings ($direction, $justify, $align) {
+  display: flex;
+  flex-direction: $direction;
+  justify-content: $justify;
+  align-items: $align;
+}
+
+@mixin text-hover($color) {
+  display: inline-block;
+  position: relative;
+  color: $color;
+
+  &::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    left: 0;
+    bottom: 0;
+    background-color: $color;
+    transform: scaleX(0);
+    transform-origin: bottom left;
+    transition: transform 0.3s ease;
+  }
+
+  &:hover::after {
+    transform: scaleX(1);
+  }
+}
+
+// Main styles
+* {
+  padding: 0;
+  margin: 0;
+  font-family: "Montserrat", sans-serif;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  background-color: $background-color;
+  color: $text-color-main;
+  font-size: 16px;
+  box-sizing: border-box;
+  @include flex-settings(column, initial, initial);
+  min-height: 100vh;
+}
+
+header {
+  background-color: $app-color-main;
+  @include flex-settings(row, center, center);
+  padding: 0 30px;
+}
+
+nav {
+  width: 100%;
+  height: 100%;
+}
+
+main {
+  flex: 1 0 auto;
+  background-color: $background-color;
+  @include flex-settings(column, center, center);
+}
+
+h1 {
+  font-size: 1.1rem;
+}
+
+a {
+  font-style: none;
+}
+
+img {
+  width: 50%;
+}
+
+header,
+footer {
+  flex-shrink: 0;
+}
+
+footer {
+  background-color: $app-color-accent;
+  color: $background-color;
+  padding: 15px 30px;
+  @include flex-settings(row, center, center);
+}
+
+footer div,
+footer nav {
+  padding: 5px 10px;
+}
+
+footer nav {
+  width: auto;
+}
+
+// layout.ejs
+.logo-container {
+  width: 100%;
+  height: 100%;
+  font-weight: 700;
+  font-size: 1.3rem;
+  color: $app-color-accent;
+  @include flex-settings(row, flex-start, center);
+}
+
+.logo-container img {
+  width: 10%;
+  margin: 10px 15px;
+}
+
+.logo-container.footer {
+  color: $background-color;
+  width: auto;
+}
+
+.logo-container.footer img {
+  width: 5%;
+  margin-left: 0
+}
+
+.navigation-links {
+  @include flex-settings(row, end, center);
+}
+
+.navigation-links li {
+  list-style: none;
+  color: $app-color-accent;
+  margin: 0 20px;
+}
+
+.navigation-links li a {
+  text-decoration: none;
+  color: $app-color-accent;
+  padding-bottom: 5px;
+  @include text-hover($app-color-accent);
+}
+
+.links-wrap.footer {
+  margin-top: 10px;
+  align-self: flex-start;
+}
+
+.navigation-links.footer {
+  @include flex-settings(column, center, flex-end);
+}
+
+.navigation-links.footer li {
+  color: $background-color;
+  margin: 5px 0;
+}
+
+.navigation-links.footer li a {
+  color: $background-color;
+  @include text-hover($background-color);
+}
+
+.project-description {
+  width: 50%;
+}
+
+.project-description h3 {
+  font-size: 1rem;
+  margin-bottom: 5px;
+}
+
+.project-description p {
+  font-size: 0.9rem;
+}
+
+.social-media-icons {
+  @include flex-settings(row, end, center)
+}
+
+.social-media-icons a:first-child {
+  margin-right: 10px;
+}
+
+.social-media-icons a svg:hover {
+  opacity: 60%;
+  transition: 0.3s ease-in-out;
+}

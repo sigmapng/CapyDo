@@ -1,12 +1,8 @@
 # dev
-.yarn/
-!.yarn/releases
+.vscode/
 .vscode/*
 !.vscode/launch.json
 !.vscode/*.code-snippets
-.idea/workspace.xml
-.idea/usage.statistics.xml
-.idea/shelf
 
 # deps
 node_modules/
@@ -19,10 +15,17 @@ node_modules/
 logs/
 *.log
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
 # misc
 .DS_Store
+
+# SCSS
+.sass-cache/
+*.css.map
+*.sass.map
+*.scss.map
+
+# build
+/dist

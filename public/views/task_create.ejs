@@ -1,0 +1,41 @@
+<form action="/task/create" method="post" class="login-form">
+  <h3>Create a task</h3>
+  <div>
+    <label for="name">Enter a task's name</label>
+    <input type="text" name="name" id="name" autocomplete="off" required>
+  </div>
+  <div>
+    <p>Pick task's status</p>
+    <input type="radio" name="status" id="not-started" value="not started" checked>
+    <label for="not-started">"not started"</label>
+
+    <input type="radio" name="status" id="in-progress" value="in progress">
+    <label for="in-progress">"in progress"</label>
+
+    <input type="radio" name="status" id="completed" value="completed">
+    <label for="completed">completed</label>
+
+    <input type="radio" name="status" id="canceled" value="canceled">
+    <label for="canceled">canceled</label>
+  </div>
+
+  <div>
+    <p>Pick task's importance</p>
+    <input type="radio" name="importance" id="low" value="low" checked>
+    <label for="low">low</label>
+
+    <input type="radio" name="importance" id="medium" value="medium">
+    <label for="medium">medium</label>
+
+    <input type="radio" name="importance" id="high" value="high">
+    <label for="high">high</label>
+  </div>
+
+  <div>
+    <p>When the task is due?</p>
+    <input type="date" name="due_to" id="date">
+    <label for="date">Pick a date</label>
+  </div>
+
+  <input type="submit" id="submit-btn">
+</form>
