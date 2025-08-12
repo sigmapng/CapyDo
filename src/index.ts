@@ -8,9 +8,10 @@ import path from "path";
 import { authRoute } from "./routes/authRoute.ts";
 import { taskRoute } from "./routes/tasksRoute.ts";
 import { getCookie } from "hono/cookie";
+import { secureHeaders } from "hono/secure-headers";
 
 export const app = new Hono();
-app.use("*", serveStatic({ root: "./public" }));
+app.use("*", serveStatic({ root: "./public" }), secureHeaders());
 
 app.route("/", authRoute);
 app.route("/", taskRoute);
