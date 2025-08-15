@@ -1,24 +1,24 @@
 export interface User {
   id: number;
-  firstName: string;
-  userName: string;
+  firstname: string;
+  username: string;
   password: string;
 }
 
 export interface CreateUserRequest {
-  firstName: string;
-  userName: string;
+  firstname: string;
+  username: string;
   password: string;
 }
 
 export interface LoginUserRequest {
-  userName: string;
+  username: string;
   password: string;
 }
 
 export interface UpdateUserRequest {
-  firstName?: string;
-  userName: string;
+  firstname?: string;
+  username: string;
   password?: string;
 }
 

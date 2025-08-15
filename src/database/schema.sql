@@ -1,23 +1,33 @@
 -- Database Initialization --
-DO $$ BEGIN IF NOT EXISTS (
+DO $$
+BEGIN IF NOT EXISTS (
   SELECT
-  FROM pg_database
-  WHERE datname = 'capydo'
+  FROM
+    pg_database
+  WHERE
+    datname = 'capydo'
 ) THEN CREATE DATABASE capydo;
+
 END IF;
+
 END $$;
-CREATE TABLE Users (
-  id SERIAL PRIMARY KEY,
-  username VARCHAR(100) NOT NULL UNIQUE,
-  password VARCHAR(255) NOT NULL,
-  name VARCHAR(100) NOT NULL
-);
-CREATE TABLE Task (
-  id SERIAL PRIMARY KEY,
-  name VARCHAR(100) NOT NULL,
-  status VARCHAR(255) NOT NULL,
-  importance VARCHAR(255) NOT NULL,
-  due_to DATE,
-  date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  user_id INT REFERENCES Users(id)
-);
+
+CREATE TABLE
+  users (
+    id SERIAL PRIMARY KEY,
+    username character varying(100) NOT NULL UNIQUE,
+    password character varying(255) NOT NULL,
+    firstname character varying(100) NOT NULL
+  );
+
+CREATE TABLE
+  task (
+    id SERIAL PRIMARY KEY,
+    name character varying(100) NOT NULL,
+    status character varying(255) NOT NULL,
+    importance character varying(255) NOT NULL,
+    "dueTo" date,
+    "dateCreated" timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    "userId" integer REFERENCES users (id) ON DELETE CASCADE
+  );
+  

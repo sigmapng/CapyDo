@@ -42,7 +42,7 @@ taskRoute.post("/task/create", async (c) => {
     name: String(body.name),
     status: String(body.status),
     importance: String(body.importance),
-    dueTo: new Date(String(body.due_to)),
+    dueTo: new Date(String(body.dueTo)),
     userId: Number(getCookie(c, "userId")),
   };
 
