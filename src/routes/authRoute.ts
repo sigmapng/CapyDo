@@ -1,14 +1,15 @@
 import { Hono } from "hono";
 import { jwt, sign } from "hono/jwt";
 import bcrypt from "bcrypt";
+import { z } from "zod";
 import { renderPage } from "../index.ts";
 import { authService } from "../services/authService.ts";
 import { getCookie, setCookie, deleteCookie } from "hono/cookie";
+import { validateRegister, validateLogin } from "../middleware/validation.ts";
 import type {
   User,
   CreateUserRequest,
   UpdateUserRequest,
-  LoginUserRequest,
   DeleteUserRequest,
 } from "../interfaces/user.ts";
 
@@ -30,39 +31,52 @@ authRoute.post("/signup", async (c) => {
     process.env.JWT_SECRET as string
   );
 
-  const hash = await bcrypt.hash(String(body.password), 10);
+  try {
+    const validData = await validateRegister({
+      username: String(body.username),
+      password: String(body.password),
+      firstName: String(body.firstName),
+    });
 
-  const newUser: CreateUserRequest = {
-    username: String(body.username),
-    password: hash,
-    firstname: String(body.firstname),
-  };
+    const hash = await bcrypt.hash(validData.password, 10);
 
-  const existing = await service.getUserInfo({
-    username: newUser.username,
-  } as User);
+    const newUser: CreateUserRequest = {
+      username: validData.username,
+      password: hash,
+      firstname: validData.firstname,
+    };
 
-  if (existing) {
-    return c.text("Username already taken");
+    const existing = await service.getUserInfo({
+      username: newUser.username,
+    } as User);
+
+    if (existing) {
+      return c.text("Username already taken");
+    }
+
+    await service.createUser(newUser);
+
+    const created = await service.getUserInfo({
+      username: newUser.username,
+    } as User);
+
+    console.log("Created user:", created);
+
+    await setCookie(c, "userId", created.id, {
+      path: "/",
+      secure: true,
+      httpOnly: true,
+      maxAge: 30 * 24 * 60 * 60, // 1 month
+      sameSite: "Strict",
+    });
+
+    return c.redirect("/", 301);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json({ errors: error.issues }, 400);
+    }
+    throw error;
   }
-
-  await service.createUser(newUser);
-
-  const created = await service.getUserInfo({
-    username: newUser.username,
-  } as User);
-  console.log("Created user:", created);
-  const userId = created.id;
-
-  await setCookie(c, "userId", userId, {
-    path: "/",
-    secure: true,
-    httpOnly: true,
-    maxAge: 30 * 24 * 60 * 60, //1 month
-    sameSite: "Strict",
-  });
-
-  return c.redirect("/", 301);
 });
 
 authRoute.use(
@@ -81,47 +95,50 @@ authRoute.get("/login", async (c) => {
 authRoute.post("/login", async (c) => {
   const body = await c.req.parseBody();
 
-  const userLoginRequest: LoginUserRequest = {
-    username: String(body.username),
-    password: String(body.password),
-  };
+  try {
+    const validData = await validateLogin({
+      username: String(body.username),
+      password: String(body.password),
+    });
 
-  const existing = await service.getUserInfo({
-    username: userLoginRequest.username,
-    password: userLoginRequest.password,
-  } as User);
+    const existing = await service.getUserInfo({
+      username: validData.username,
+    } as User);
 
-  const hash = existing.password;
+    if (!existing) {
+      return c.text("User not found", 404);
+    }
 
-  if (bcrypt.compareSync(userLoginRequest.password, hash) === false) {
-    return c.text(
-      "There is no user registered with this username or the password is incorrect"
-    );
+    const isValid = await bcrypt.compare(validData.password, existing.password);
+    if (!isValid) {
+      return c.text("Invalid username or password", 401);
+    }
+
+    const loggedIn = await service.getUserInfo({
+      username: validData.username,
+    } as User);
+
+    await setCookie(c, "userId", loggedIn.id, {
+      path: "/",
+      secure: true,
+      httpOnly: true,
+      maxAge: 60 * 60 * 24 * 30, //1 month
+      sameSite: "Strict",
+    });
+
+    return c.redirect("/account", 301);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json({ errors: error.issues }, 400);
+    }
+    throw error;
   }
-
-  await service.loginUser(userLoginRequest);
-
-  const loggedIn = await service.getUserInfo({
-    username: userLoginRequest.username,
-  } as User);
-
-  const userId = loggedIn.id;
-
-  await setCookie(c, "userId", userId, {
-    path: "/",
-    secure: true,
-    httpOnly: true,
-    maxAge: 60 * 60 * 24 * 30, //1 month
-    sameSite: "Strict",
-  });
-
-  return c.redirect("/account", 301);
 });
 
 // Account
 authRoute.get("/account", async (c) => {
   const userId = await getCookie(c, "userId");
-  const userJwt = c.get("jwtPayload"); 
+  const userJwt = c.get("jwtPayload");
 
   if (!userId) {
     return c.redirect("/login");

@@ -11,11 +11,6 @@ export interface CreateUserRequest {
   password: string;
 }
 
-export interface LoginUserRequest {
-  username: string;
-  password: string;
-}
-
 export interface UpdateUserRequest {
   firstname?: string;
   username: string;

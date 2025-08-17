@@ -3,7 +3,6 @@ import type {
   User,
   CreateUserRequest,
   UpdateUserRequest,
-  LoginUserRequest,
   DeleteUserRequest,
 } from "../interfaces/user.ts";
 
@@ -15,20 +14,28 @@ export class authService {
         [user.username]
       );
       return result.rows[0];
-    } catch {
-      console.error("Failed to get user by username");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Error caught:", error.message);
+      } else {
+        console.error("An unexpected error occurred:", error);
+      }
     }
   }
 
   async getUserById(id: string) {
     try {
       const result = await pool.query(
-        "SELECT * FROM public.users WHERE id = $1",
+        "SELECT id, username, password, firstname FROM public.users WHERE id = $1",
         [id]
       );
       return result.rows[0];
-    } catch {
-      console.error("Failed to get user by id");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Error caught:", error.message);
+      } else {
+        console.error("An unexpected error occurred:", error);
+      }
     }
   }
 
@@ -38,19 +45,12 @@ export class authService {
         "INSERT INTO public.users (username, password, firstname) VALUES ($1, $2, $3)",
         [create.username, create.password, create.firstname]
       );
-    } catch {
-      console.error("Failed to create user");
-    }
-  }
-
-  async loginUser(login: LoginUserRequest) {
-    try {
-      await pool.query(
-        "SELECT username, password FROM public.users WHERE username = $1",
-        [login.username]
-      );
-    } catch {
-      console.error("Failed to login user");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Error caught:", error.message);
+      } else {
+        console.error("An unexpected error occurred:", error);
+      }
     }
   }
 
@@ -60,8 +60,12 @@ export class authService {
         "UPDATE public.users SET firstname = $1, password = $2 WHERE username = $3",
         [update.firstname, update.password, update.username]
       );
-    } catch {
-      console.error("Failed to change user info");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Error caught:", error.message);
+      } else {
+        console.error("An unexpected error occurred:", error);
+      }
     }
   }
 
@@ -70,8 +74,12 @@ export class authService {
       await pool.query("DELETE FROM public.users WHERE username = $1", [
         remove.username,
       ]);
-    } catch {
-      console.error("Failed to delete user");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Error caught:", error.message);
+      } else {
+        console.error("An unexpected error occurred:", error);
+      }
     }
   }
 }

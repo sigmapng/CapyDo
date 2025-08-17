@@ -14,8 +14,12 @@ export class taskService {
         [task.name]
       );
       return result.rows[0];
-    } catch {
-      console.error("Failed to get task by name");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Error caught:", error.message);
+      } else {
+        console.error("An unexpected error occurred:", error);
+      }
     }
   }
 
@@ -26,8 +30,12 @@ export class taskService {
         [userID]
       );
       return result.rows;
-    } catch {
-      console.error("Failed to get task by user id");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Error caught:", error.message);
+      } else {
+        console.error("An unexpected error occurred:", error);
+      }
     }
   }
 
@@ -43,27 +51,39 @@ export class taskService {
           create.userId,
         ]
       );
-    } catch {
-      console.error("Failed to create task");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Error caught:", error.message);
+      } else {
+        console.error("An unexpected error occurred:", error);
+      }
     }
   }
 
   async changeTask(update: UpdateTaskRequest) {
     try {
       await pool.query(
-        " UPDATE public.task SET name = $1, status = $2, importance = $3, dueTo = $4, WHERE name = $1",
+        "UPDATE public.task SET name = $1, status = $2, importance = $3, dueTo = $4 WHERE name = $1",
         [update.name, update.status, update.importance, update.dueTo]
       );
-    } catch {
-      console.error("Failed to update task");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Error caught:", error.message);
+      } else {
+        console.error("An unexpected error occurred:", error);
+      }
     }
   }
 
   async deleteTask(remove: DeleteTaskRequest) {
     try {
       await pool.query("DELETE FROM public.task WHERE id = $1", [remove.id]);
-    } catch {
-      console.error("Failed to delete task");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Error caught:", error.message);
+      } else {
+        console.error("An unexpected error occurred:", error);
+      }
     }
   }
 }

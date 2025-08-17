@@ -16,7 +16,8 @@
     "helmet": "^8.1.0",
     "hono": "^4.8.3",
     "pg": "^8.16.3",
-    "postgres": "^3.4.7"
+    "postgres": "^3.4.7",
+    "zod": "^4.1.0-canary.20250813T051310"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
