@@ -16,7 +16,3 @@ export interface UpdateUserRequest {
   username: string;
   password?: string;
 }
-
-export interface DeleteUserRequest {
-  username: string;
-}

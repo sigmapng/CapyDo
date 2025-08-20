@@ -24,9 +24,9 @@ const LoginSchema = z.object({
     .min(3)
     .max(30)
     .regex(/^[a-zA-Z0-9_]+$/),
-  password: z.string().min(8).max(100),
+  password: z.string().min(1),
 });
 
 export function validateLogin(data: unknown) {
-  return LoginSchema.parse(data);
+  return LoginSchema.parseAsync(data);
 }

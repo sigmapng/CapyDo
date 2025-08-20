@@ -10,7 +10,7 @@ export class taskService {
   async getTaskInfo(task: Task) {
     try {
       const result = await pool.query(
-        "SELECT id, name, status, importance, dueTo, dateCreated, userId FROM public.task WHERE name = $1",
+        "SELECT id, name, status, importance, 'dueTo','dateCreated', 'userId' FROM public.task WHERE name = $1",
         [task.name]
       );
       return result.rows[0];
@@ -26,7 +26,7 @@ export class taskService {
   async getTasksByUserId(userID: number) {
     try {
       const result = await pool.query(
-        "SELECT id, name, status, importance, dueTo, dateCreated, userID FROM public.task WHERE userID = $1",
+        "SELECT id, name, status, importance, 'dueTo', 'dateCreated', 'userId' FROM public.task WHERE 'userId' = $1",
         [userID]
       );
       return result.rows;
@@ -42,7 +42,7 @@ export class taskService {
   async createTask(create: CreateTaskRequest) {
     try {
       await pool.query(
-        "INSERT INTO public.task (name, status, importance, dueTo, userID) VALUES ($1, $2, $3, $4, $5)",
+        "INSERT INTO public.task (name, status, importance, 'dueTo', 'userId') VALUES ($1, $2, $3, $4, $5)",
         [
           create.name,
           create.status,
@@ -63,7 +63,7 @@ export class taskService {
   async changeTask(update: UpdateTaskRequest) {
     try {
       await pool.query(
-        "UPDATE public.task SET name = $1, status = $2, importance = $3, dueTo = $4 WHERE name = $1",
+        "UPDATE public.task SET name = $1, status = $2, importance = $3, 'dueTo' = $4 WHERE name = $1",
         [update.name, update.status, update.importance, update.dueTo]
       );
     } catch (error: unknown) {

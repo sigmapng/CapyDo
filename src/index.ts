@@ -7,21 +7,46 @@ import ejs from "ejs";
 import path from "path";
 import { authRoute } from "./routes/authRoute.ts";
 import { taskRoute } from "./routes/tasksRoute.ts";
-import { getCookie } from "hono/cookie";
 import { secureHeaders } from "hono/secure-headers";
-import { jwt } from "hono/jwt";
+import { authService } from "./services/authService.ts";
 
-export const app = new Hono();
-app.use(
-  "*",
-  serveStatic({ root: "./public" }),
-  secureHeaders(),
-  jwt({ secret: process.env.JWT_SECRET as string })
-);
+export type Variables = {
+  user?: any;
+  isLoggedIn: boolean;
+};
 
-app.route("/", authRoute);
-app.route("/", taskRoute);
+type TemplateData = {
+  body: string;
+  layout: string;
+};
 
+export const app = new Hono<{ Variables: Variables }>();
+const templateCache = new Map<string, TemplateData>();
+const service = new authService();
+
+app.use("*", secureHeaders());
+
+// Session middleware
+app.use("*", async (c, next) => {
+  const payload = c.get("jwtPayload");
+
+  if (payload) {
+    try {
+      const user = await service.getUserById(payload.userId);
+      c.set("user", user);
+      c.set("isLoggedIn", true);
+    } catch {
+      c.set("isLoggedIn", false);
+    }
+  } else {
+    c.set("isLoggedIn", false);
+  }
+  await next();
+});
+
+app.use("*", serveStatic({ root: "./public" }));
+
+// Template rendering with caching
 export async function renderPage(c: Context, view: string, data: any = {}) {
   const bodyTemplate = await readFile(path.join("public/views", view), "utf-8");
 
@@ -30,16 +55,24 @@ export async function renderPage(c: Context, view: string, data: any = {}) {
     "utf-8"
   );
 
-  const isLoggedIn = Boolean(getCookie(c, "userId"));
-
   const body = ejs.render(bodyTemplate, data);
-  return ejs.render(layoutTemplate, { ...data, body, isLoggedIn });
+  return ejs.render(layoutTemplate, { ...data, body });
 }
+
+app.route("/", authRoute);
+app.route("/", taskRoute);
 
 app.get("/", async (c) => {
   const page = await renderPage(c, "index.ejs", { title: "Home" });
   return c.html(page);
 });
+
+if (process.env.NODE_ENV === "development") {
+  app.get("/clear-cache", (c) => {
+    templateCache.clear();
+    return c.text("Template cache cleared");
+  });
+}
 
 serve(
   {

@@ -3,7 +3,6 @@ import type {
   User,
   CreateUserRequest,
   UpdateUserRequest,
-  DeleteUserRequest,
 } from "../interfaces/user.ts";
 
 export class authService {
@@ -69,10 +68,10 @@ export class authService {
     }
   }
 
-  async deleteUser(remove: DeleteUserRequest) {
+  async deleteUser(username: string) {
     try {
       await pool.query("DELETE FROM public.users WHERE username = $1", [
-        remove.username,
+        username,
       ]);
     } catch (error: unknown) {
       if (error instanceof Error) {

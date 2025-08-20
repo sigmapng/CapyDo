@@ -1,6 +1,6 @@
 # CapyDo :green_heart:
 
-**CapyDo** is a modern _task management_ website developed with **Hono**. It allows you to effortlessly _sign up_ or _log in_ to manage your tasks, helping you stay organized and maintain a consistent routine :running_woman:
+**CapyDo** is a modern _task management_ website developed with **_Hono_**. It allows you to effortlessly _sign up_ or _log in_ to manage your tasks, helping you stay organized and maintain a consistent routine :running_woman:
 
 # Tech stack:
 
