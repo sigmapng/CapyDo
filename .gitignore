@@ -33,4 +33,7 @@ lerna-debug.log*
 # json
 *.cache.json
 *.log.json
-package-lock.json
+
+/.tmp
+/temp
+*.tmp

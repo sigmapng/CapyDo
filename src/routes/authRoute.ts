@@ -10,6 +10,7 @@ import type {
   CreateUserRequest,
   UpdateUserRequest,
 } from "../interfaces/user.ts";
+import { setCookie, deleteCookie } from "hono/cookie";
 import type { Variables } from "../index.ts";
 
 const service = new authService();
@@ -26,9 +27,9 @@ authRoute.post("/signup", async (c) => {
 
   try {
     const validData = await validateRegister({
-      username: String(body.username),
-      password: String(body.password),
-      firstname: String(body.firstname),
+      username: body.username,
+      password: body.password,
+      firstname: body.firstname,
     });
 
     const hash = await bcrypt.hash(validData.password, 10);
@@ -60,6 +61,14 @@ authRoute.post("/signup", async (c) => {
       process.env.JWT_SECRET as string
     );
 
+    setCookie(c, "auth-token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      maxAge: 60 * 60 * 1000, // 1 hour
+      path: "/",
+    });
+
     return c.redirect(`/${created.username}/account`, 303);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -80,8 +89,8 @@ authRoute.post("/login", async (c) => {
 
   try {
     const validData = await validateLogin({
-      username: String(body.username),
-      password: String(body.password),
+      username: body.username,
+      password: body.password,
     });
 
     const existing = await service.getUserInfo({
@@ -108,6 +117,14 @@ authRoute.post("/login", async (c) => {
       process.env.JWT_SECRET as string
     );
 
+    setCookie(c, "auth-token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      maxAge: 60 * 60 * 1000, // 1 hour
+      path: "/",
+    });
+
     return c.redirect(`/${loggedIn.username}/account`, 303);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -115,30 +132,6 @@ authRoute.post("/login", async (c) => {
     }
     throw error;
   }
-});
-
-// Protecting paths
-authRoute.use("/:username/*", async (c, next) => {
-  try {
-    await jwt({ secret: process.env.JWT_SECRET as string, cookie: "token" })(
-      c,
-      next
-    );
-  } catch {
-    return c.redirect("/login");
-  }
-
-  const payload = c.get("jwtPayload");
-  const urlUsername = c.req.param("username");
-
-  const user = await service.getUserById(payload.userId);
-  c.set("user", user);
-
-  if (!user || user.username !== urlUsername) {
-    return c.text("Forbidden", 403);
-  }
-
-  await next();
 });
 
 // Account
@@ -193,21 +186,6 @@ authRoute.put("/:username/account-settings", async (c) => {
 
 // Log Out
 authRoute.post("/:username/account", async (c) => {
+  deleteCookie(c, "auth-token");
   return c.redirect("/", 302);
-});
-
-// Delete User
-authRoute.delete("/:username/account", async (c) => {
-  try {
-    const user = c.get("user");
-
-    await service.deleteUser(user.username);
-
-    return c.json({ redirect: "/" });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return c.json({ errors: error.issues }, 400);
-    }
-    throw error;
-  }
 });

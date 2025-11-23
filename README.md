@@ -63,6 +63,6 @@ With the help of Zod, we check if the string fits the requirements.
 
 **JWT** - _JSON web token_
 
-# Logo
+# Copyright
 
 Capybara logo belongs to **Delwar018** [Flaticon](https://www.flaticon.com/authors/delwar018)

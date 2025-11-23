@@ -6,6 +6,7 @@ import { readFile } from "fs/promises";
 import ejs from "ejs";
 import path from "path";
 import { authRoute } from "./routes/authRoute.ts";
+import { userRoute } from "./routes/userRoute.ts";
 import { taskRoute } from "./routes/tasksRoute.ts";
 import { secureHeaders } from "hono/secure-headers";
 import { authService } from "./services/authService.ts";
@@ -15,13 +16,7 @@ export type Variables = {
   isLoggedIn: boolean;
 };
 
-type TemplateData = {
-  body: string;
-  layout: string;
-};
-
 export const app = new Hono<{ Variables: Variables }>();
-const templateCache = new Map<string, TemplateData>();
 const service = new authService();
 
 app.use("*", secureHeaders());
@@ -42,11 +37,10 @@ app.use("*", async (c, next) => {
     c.set("isLoggedIn", false);
   }
   await next();
-});
+})
 
 app.use("*", serveStatic({ root: "./public" }));
 
-// Template rendering with caching
 export async function renderPage(c: Context, view: string, data: any = {}) {
   const bodyTemplate = await readFile(path.join("public/views", view), "utf-8");
 
@@ -55,8 +49,18 @@ export async function renderPage(c: Context, view: string, data: any = {}) {
     "utf-8"
   );
 
-  const body = ejs.render(bodyTemplate, data);
-  return ejs.render(layoutTemplate, { ...data, body });
+  const isLoggedIn = c.get("isLoggedIn");
+  const user = c.get("user");
+
+  const templateData = {
+    ...data,
+    isLoggedIn,
+    user,
+    username: user?.username || null,
+  };
+
+  const body = ejs.render(bodyTemplate, templateData);
+  return ejs.render(layoutTemplate, { ...templateData, body });
 }
 
 app.route("/", authRoute);
@@ -66,13 +70,6 @@ app.get("/", async (c) => {
   const page = await renderPage(c, "index.ejs", { title: "Home" });
   return c.html(page);
 });
-
-if (process.env.NODE_ENV === "development") {
-  app.get("/clear-cache", (c) => {
-    templateCache.clear();
-    return c.text("Template cache cleared");
-  });
-}
 
 serve(
   {

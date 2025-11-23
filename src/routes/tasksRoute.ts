@@ -8,20 +8,10 @@ import type {
   Task,
   CreateTaskRequest,
   UpdateTaskRequest,
-  DeleteTaskRequest,
 } from "../interfaces/task.ts";
 
 const service = new taskService();
 export const taskRoute = new Hono<{ Variables: Variables }>();
-
-// Protecting paths
-taskRoute.use(
-  "/:username/*",
-  jwt({
-    secret: process.env.JWT_SECRET as string,
-    cookie: "token",
-  })
-);
 
 // Tasks
 taskRoute.get("/:username/tasks", async (c) => {
