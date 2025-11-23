@@ -1,26 +1,23 @@
 import { Hono } from "hono";
+import { jwt } from "hono/jwt";
+import { z } from "zod";
+import type { Variables } from "../index.ts";
 import { renderPage } from "../index.ts";
 import { taskService } from "../services/taskService.ts";
 import type {
   Task,
   CreateTaskRequest,
   UpdateTaskRequest,
-  DeleteTaskRequest,
 } from "../interfaces/task.ts";
-import { getCookie, setCookie } from "hono/cookie";
 
 const service = new taskService();
-export const taskRoute = new Hono();
+export const taskRoute = new Hono<{ Variables: Variables }>();
 
 // Tasks
-taskRoute.get("/tasks", async (c) => {
-  const userId = await getCookie(c, "userId");
+taskRoute.get("/:username/tasks", async (c) => {
+  const user = c.get("user");
 
-  if (!userId) {
-    return c.redirect("/login");
-  }
-
-  const tasks = await service.getTasksByUserId(Number(userId));
+  const tasks = await service.getTasksByUserId(Number(user.id));
   const page = await renderPage(c, "tasks.ejs", {
     title: "Tasks",
     tasks,
@@ -30,37 +27,44 @@ taskRoute.get("/tasks", async (c) => {
 });
 
 // Create Task
-taskRoute.get("/task/create", async (c) => {
-  const page = await renderPage(c, "task_create.ejs", { title: "Tasks" });
+taskRoute.get("/:username/tasks/create", async (c) => {
+  const user = c.get("user");
+
+  const page = await renderPage(c, "task_create.ejs", {
+    title: "Create Task",
+    username: user.username,
+  });
   return c.html(page);
 });
 
-taskRoute.post("/task/create", async (c) => {
-  const body = await c.req.parseBody();
+taskRoute.post("/:username/tasks/create", async (c) => {
+  const user = c.get("user");
 
-  const newTask: CreateTaskRequest = {
-    name: String(body.name),
-    status: String(body.status),
-    importance: String(body.importance),
-    dueTo: new Date(String(body.due_to)),
-    userId: Number(getCookie(c, "userId")),
-  };
+  try {
+    const body = await c.req.parseBody();
+    const payload = c.get("jwtPayload");
 
-  await service.createTask(newTask);
+    const newTask: CreateTaskRequest = {
+      name: String(body.name),
+      status: String(body.status),
+      importance: String(body.importance),
+      dueTo: new Date(String(body.dueTo)),
+      userId: Number(payload.id),
+    };
 
-  await setCookie(c, "taskName", newTask.name, {
-    path: "/",
-    secure: true,
-    httpOnly: true,
-    maxAge: 30 * 24 * 60 * 60, //1 month
-    sameSite: "Strict",
-  });
+    await service.createTask(newTask);
 
-  return c.redirect("/tasks", 301);
+    return c.redirect(`/${user.username}/tasks`, 303);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json({ errors: error.issues }, 400);
+    }
+    throw error;
+  }
 });
 
 //Update Task
-taskRoute.put("/tasks", async (c) => {
+taskRoute.put("/:username/tasks", async (c) => {
   const body = await c.req.parseBody();
 
   const taskUpdated: UpdateTaskRequest = {
@@ -79,24 +83,21 @@ taskRoute.put("/tasks", async (c) => {
   }
 
   await service.changeTask(taskUpdated);
-  return c.redirect("/tasks", 301);
+  return c.redirect("/:username/tasks", 301);
 });
 
 // Delete Task
-taskRoute.delete("/tasks", async (c) => {
-  const task = await getCookie(c, "taskName");
-  console.log(task);
-  const taskName = await service.getTaskInfo({
-    name: task,
-  } as Task);
-
-  const taskId = taskName.id;
-
-  const taskRemove: DeleteTaskRequest = {
-    id: Number(taskId),
-  };
-  console.log(taskId);
-
-  await service.deleteTask(taskRemove);
-  return c.json({ redirect: "/tasks" });
+taskRoute.delete("/:username/tasks/:taskId", async (c) => {
+  try {
+    taskRoute.delete("/:username/tasks/:taskId", async (c) => {
+      const taskId = Number(c.req.param("taskId"));
+      await service.deleteTask({ id: taskId });
+      return c.json({ redirect: `/${c.get("user").username}/tasks` });
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json({ errors: error.issues }, 400);
+    }
+    throw error;
+  }
 });

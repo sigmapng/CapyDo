@@ -1,18 +1,20 @@
 import { Hono } from "hono";
+import { jwt, sign } from "hono/jwt";
 import bcrypt from "bcrypt";
+import { z } from "zod";
 import { renderPage } from "../index.ts";
 import { authService } from "../services/authService.ts";
-import { getCookie, setCookie, deleteCookie } from "hono/cookie";
+import { validateRegister, validateLogin } from "../middleware/validation.ts";
 import type {
   User,
   CreateUserRequest,
   UpdateUserRequest,
-  LoginUserRequest,
-  DeleteUserRequest,
 } from "../interfaces/user.ts";
+import { setCookie, deleteCookie } from "hono/cookie";
+import type { Variables } from "../index.ts";
 
 const service = new authService();
-export const authRoute = new Hono();
+export const authRoute = new Hono<{ Variables: Variables }>();
 
 // Sign Up
 authRoute.get("/signup", async (c) => {
@@ -23,39 +25,57 @@ authRoute.get("/signup", async (c) => {
 authRoute.post("/signup", async (c) => {
   const body = await c.req.parseBody();
 
-  const hash = await bcrypt.hash(String(body.password), 10);
+  try {
+    const validData = await validateRegister({
+      username: body.username,
+      password: body.password,
+      firstname: body.firstname,
+    });
 
-  const newUser: CreateUserRequest = {
-    userName: String(body.username),
-    password: hash,
-    firstName: String(body.name),
-  };
+    const hash = await bcrypt.hash(validData.password, 10);
 
-  const existing = await service.getUserInfo({
-    userName: newUser.userName,
-  } as User);
+    const newUser: CreateUserRequest = {
+      username: validData.username,
+      password: hash,
+      firstname: validData.firstname,
+    };
 
-  if (existing) {
-    return c.text("Username already taken");
+    const existing = await service.getUserInfo({
+      username: newUser.username,
+    } as User);
+
+    if (existing) {
+      return c.text("Username already taken");
+    }
+
+    await service.createUser(newUser);
+
+    const created = await service.getUserInfo({
+      username: newUser.username,
+    } as User);
+
+    const userId = created.id;
+
+    const token = await sign(
+      { userId, exp: Math.floor(Date.now() / 1000) + 60 * 60, type: "access" },
+      process.env.JWT_SECRET as string
+    );
+
+    setCookie(c, "auth-token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      maxAge: 60 * 60 * 1000, // 1 hour
+      path: "/",
+    });
+
+    return c.redirect(`/${created.username}/account`, 303);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json({ errors: error.issues }, 400);
+    }
+    throw error;
   }
-
-  await service.createUser(newUser);
-
-  const created = await service.getUserInfo({
-    userName: newUser.userName,
-  } as User);
-  console.log("Created user:", created);
-  const userId = created.id;
-
-  await setCookie(c, "userId", userId, {
-    path: "/",
-    secure: true,
-    httpOnly: true,
-    maxAge: 30 * 24 * 60 * 60, //1 month
-    sameSite: "Strict",
-  });
-
-  return c.redirect("/", 301);
 });
 
 // Log In
@@ -67,110 +87,105 @@ authRoute.get("/login", async (c) => {
 authRoute.post("/login", async (c) => {
   const body = await c.req.parseBody();
 
-  const userLoginRequest: LoginUserRequest = {
-    userName: String(body.username),
-    password: String(body.password),
-  };
+  try {
+    const validData = await validateLogin({
+      username: body.username,
+      password: body.password,
+    });
 
-  const existing = await service.getUserInfo({
-    userName: userLoginRequest.userName,
-    password: userLoginRequest.password,
-  } as User);
+    const existing = await service.getUserInfo({
+      username: validData.username,
+    } as User);
 
-  const hash = existing.password;
+    if (!existing) {
+      return c.text("User not found", 404);
+    }
 
-  if (!bcrypt.compareSync(userLoginRequest.password, hash)) {
-    return c.text(
-      "There is no user registered with this username or the password is incorrect"
+    const isValid = await bcrypt.compare(validData.password, existing.password);
+    if (!isValid) {
+      return c.text("Invalid username or password", 401);
+    }
+
+    const loggedIn = await service.getUserInfo({
+      username: validData.username,
+    } as User);
+
+    const userId = loggedIn.id;
+
+    const token = await sign(
+      { userId, exp: Math.floor(Date.now() / 1000) + 60 * 60, type: "access" },
+      process.env.JWT_SECRET as string
     );
+
+    setCookie(c, "auth-token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      maxAge: 60 * 60 * 1000, // 1 hour
+      path: "/",
+    });
+
+    return c.redirect(`/${loggedIn.username}/account`, 303);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json({ errors: error.issues }, 400);
+    }
+    throw error;
   }
-
-  await service.loginUser(userLoginRequest);
-
-  const loggedIn = await service.getUserInfo({
-    userName: userLoginRequest.userName,
-  } as User);
-
-  const userId = loggedIn.id;
-
-  await setCookie(c, "userId", userId, {
-    path: "/",
-    secure: true,
-    httpOnly: true,
-    maxAge: 60 * 60 * 24 * 30, //1 month
-    sameSite: "Strict",
-  });
-
-  return c.redirect("/account", 301);
 });
 
 // Account
-authRoute.get("/account", async (c) => {
-  const userId = await getCookie(c, "userId");
+authRoute.get("/:username/account", async (c) => {
+  const user = c.get("user");
+  const urlUsername = c.req.param("username");
 
-  if (!userId) {
-    return c.redirect("/login");
+  if (urlUsername !== user.username) {
+    return c.redirect(`/${user.username}/account`, 302);
   }
 
-  const user = await service.getUserById(userId);
   const page = await renderPage(c, "account.ejs", {
     title: "Account",
-    name: user.name,
+    name: user.firstname,
+    username: user.username,
   });
+
   return c.html(page);
 });
 
 // Update
-authRoute.get("/account-settings", async (c) => {
+authRoute.get("/:username/account-settings", async (c) => {
   const page = await renderPage(c, "account_settings.ejs", {
     title: "Update information",
   });
   return c.html(page);
 });
 
-authRoute.put("/account-settings", async (c) => {
-  const body = await c.req.parseBody();
+authRoute.put("/:username/account-settings", async (c) => {
+  try {
+    const body = await c.req.parseBody();
+    const user = c.get("user");
 
-  const userUpdated: UpdateUserRequest = {
-    firstName: String(body.firstName),
-    password: String(body.password),
-    userName: String(body.username),
-  };
+    const hash = await bcrypt.hash(String(body.password), 10);
+    const current = await service.getUserById(user.id);
 
-  const existing = await service.getUserInfo({
-    userName: userUpdated.userName,
-  } as User);
+    const userUpdated: UpdateUserRequest = {
+      firstname: String(body.firstname),
+      password: hash,
+      username: current.username,
+    };
 
-  if (userUpdated.userName !== existing.userName) {
-    return c.text("User with this name doesn't exist");
+    await service.changeUserInfo(userUpdated);
+    return c.redirect(`/${current.username}/account`, 303);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json({ errors: error.issues }, 400);
+    }
+    throw error;
   }
-
-  await service.changeUserInfo(userUpdated);
-  return c.redirect("/account", 301);
 });
 
 // Log Out
-authRoute.post("/account", async (c) => {
-  deleteCookie(c, "userId", { path: "/" });
-  return c.redirect("/", 301);
-});
-
-// Delete User
-authRoute.delete("/account", async (c) => {
-  const userId = await getCookie(c, "userId");
-  console.log(userId);
-
-  if (!userId) {
-    return c.redirect("/");
-  }
-
-  const user = await service.getUserById(userId);
-  const userRemove: DeleteUserRequest = {
-    username: user.username,
-  };
-  console.log(userRemove.username);
-
-  deleteCookie(c, "userId", { path: "/" });
-  await service.deleteUser(userRemove);
-  return c.json({ redirect: "/" });
+authRoute.post("/:username/account", async (c) => {
+  deleteCookie(c, "auth-token");
+  return c.redirect("/", 302);
 });

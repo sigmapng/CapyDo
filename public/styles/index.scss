@@ -120,6 +120,16 @@ footer nav {
   margin: 10px 15px;
 }
 
+.logo-container.header a {
+  text-decoration: none;
+  color: $app-color-accent;
+}
+
+.logo-container.header a:hover {
+  opacity: 75%;
+  transition: 0.3s ease-in-out;
+}
+
 .logo-container.footer {
   color: $background-color;
   width: auto;

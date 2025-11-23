@@ -12,7 +12,7 @@ const pool = new Pool({
   connectionTimeoutMillis: 2000,
 });
 
-await pool.connect();
+pool.connect();
 console.log("swimming :)");
 
 pool.on("error", (err) => {

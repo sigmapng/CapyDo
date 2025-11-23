@@ -29,3 +29,11 @@ lerna-debug.log*
 
 # build
 /dist
+
+# json
+*.cache.json
+*.log.json
+
+/.tmp
+/temp
+*.tmp

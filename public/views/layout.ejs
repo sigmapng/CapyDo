@@ -19,19 +19,18 @@
   <header>
     <div class="logo-container header">
       <img src="/static/capybara-green.png" alt="Green silhouette of a capybara">
-      <p>CapyDo</p>
+      <a href="/">CapyDo</a>
     </div>
 
     <nav>
       <ul class="navigation-links">
         <% if(isLoggedIn) { %>
           <li>
-            <a href="/tasks">Tasks</a>
+            <a href="/<%= username %>/tasks">Tasks</a>
           </li>
           <li>
-            <a href="/account">Account</a>
+            <a href="/<%= username %>/account">Account</a>
           </li>
-
           <% } else { %>
             <li>
               <a href="/login">Log In</a>

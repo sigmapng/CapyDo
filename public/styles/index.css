@@ -96,6 +96,16 @@ footer nav {
   margin: 10px 15px;
 }
 
+.logo-container.header a {
+  text-decoration: none;
+  color: #2F471E;
+}
+
+.logo-container.header a:hover {
+  opacity: 75%;
+  transition: 0.3s ease-in-out;
+}
+
 .logo-container.footer {
   color: #F8F8F8;
   width: auto;
@@ -127,7 +137,6 @@ footer nav {
   position: relative;
   color: #2F471E;
 }
-
 .navigation-links li a::after {
   content: "";
   position: absolute;
@@ -140,7 +149,6 @@ footer nav {
   transform-origin: bottom left;
   transition: transform 0.3s ease;
 }
-
 .navigation-links li a:hover::after {
   transform: scaleX(1);
 }
@@ -168,7 +176,6 @@ footer nav {
   position: relative;
   color: #F8F8F8;
 }
-
 .navigation-links.footer li a::after {
   content: "";
   position: absolute;
@@ -181,7 +188,6 @@ footer nav {
   transform-origin: bottom left;
   transition: transform 0.3s ease;
 }
-
 .navigation-links.footer li a:hover::after {
   transform: scaleX(1);
 }
@@ -213,6 +219,4 @@ footer nav {
 .social-media-icons a svg:hover {
   opacity: 60%;
   transition: 0.3s ease-in-out;
-}
-
-/*# sourceMappingURL=index.css.map */
+}/*# sourceMappingURL=index.css.map */
