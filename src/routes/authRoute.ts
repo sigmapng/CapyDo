@@ -2,23 +2,17 @@ import { Hono } from "hono";
 import { jwt, sign } from "hono/jwt";
 import bcrypt from "bcrypt";
 import { z } from "zod";
-import { renderPage } from "../index.ts";
-import { authService } from "../services/authService.ts";
+import { renderPage, type Variables } from "../index.ts";
+import { authService, type User } from "../services/authService.ts";
 import { validateRegister, validateLogin } from "../middleware/validation.ts";
-import type {
-  User,
-  CreateUserRequest,
-  UpdateUserRequest,
-} from "../interfaces/user.ts";
 import { setCookie, deleteCookie } from "hono/cookie";
-import type { Variables } from "../index.ts";
 
 const service = new authService();
 export const authRoute = new Hono<{ Variables: Variables }>();
 
 // Sign Up
 authRoute.get("/signup", async (c) => {
-  const page = await renderPage(c, "sign_up.ejs", { title: "Sign Up" });
+  const page = await renderPage(c, "auth/sign_up.ejs", { title: "Sign Up" });
   return c.html(page);
 });
 
@@ -34,7 +28,7 @@ authRoute.post("/signup", async (c) => {
 
     const hash = await bcrypt.hash(validData.password, 10);
 
-    const newUser: CreateUserRequest = {
+    const newUser: User = {
       username: validData.username,
       password: hash,
       firstname: validData.firstname,
@@ -80,7 +74,7 @@ authRoute.post("/signup", async (c) => {
 
 // Log In
 authRoute.get("/login", async (c) => {
-  const page = await renderPage(c, "login.ejs", { title: "Log In" });
+  const page = await renderPage(c, "auth/login.ejs", { title: "Log In" });
   return c.html(page);
 });
 
@@ -143,7 +137,7 @@ authRoute.get("/:username/account", async (c) => {
     return c.redirect(`/${user.username}/account`, 302);
   }
 
-  const page = await renderPage(c, "account.ejs", {
+  const page = await renderPage(c, "/user_account/account.ejs", {
     title: "Account",
     name: user.firstname,
     username: user.username,
@@ -154,7 +148,7 @@ authRoute.get("/:username/account", async (c) => {
 
 // Update
 authRoute.get("/:username/account-settings", async (c) => {
-  const page = await renderPage(c, "account_settings.ejs", {
+  const page = await renderPage(c, "/user_account/account_settings.ejs", {
     title: "Update information",
   });
   return c.html(page);
@@ -168,7 +162,7 @@ authRoute.put("/:username/account-settings", async (c) => {
     const hash = await bcrypt.hash(String(body.password), 10);
     const current = await service.getUserById(user.id);
 
-    const userUpdated: UpdateUserRequest = {
+    const userUpdated: User = {
       firstname: String(body.firstname),
       password: hash,
       username: current.username,

@@ -1,16 +1,20 @@
-import pool from "../database/client.ts";
-import type {
-  Task,
-  CreateTaskRequest,
-  UpdateTaskRequest,
-  DeleteTaskRequest,
-} from "../interfaces/task.ts";
+import { pool } from "../database/client.ts";
+
+export interface Task {
+  id?: number;
+  name?: string;
+  status?: string;
+  importance?: string;
+  dueTo?: Date;
+  dateCreated?: Date;
+  userId?: number;
+}
 
 export class taskService {
   async getTaskInfo(task: Task) {
     try {
       const result = await pool.query(
-        "SELECT id, name, status, importance, 'dueTo','dateCreated', 'userId' FROM public.task WHERE name = $1",
+        "SELECT id, name, status, importance, dueTo, dateCreated, userId FROM public.task WHERE name = $1",
         [task.name]
       );
       return result.rows[0];
@@ -26,7 +30,7 @@ export class taskService {
   async getTasksByUserId(userID: number) {
     try {
       const result = await pool.query(
-        "SELECT id, name, status, importance, 'dueTo', 'dateCreated', 'userId' FROM public.task WHERE 'userId' = $1",
+        "SELECT id, name, status, importance, dueTo, dateCreated, userId FROM public.task WHERE userId = $1",
         [userID]
       );
       return result.rows;
@@ -39,10 +43,10 @@ export class taskService {
     }
   }
 
-  async createTask(create: CreateTaskRequest) {
+  async createTask(create: Task) {
     try {
       await pool.query(
-        "INSERT INTO public.task (name, status, importance, 'dueTo', 'userId') VALUES ($1, $2, $3, $4, $5)",
+        "INSERT INTO public.task (name, status, importance, dueTo, userId) VALUES ($1, $2, $3, $4, $5)",
         [
           create.name,
           create.status,
@@ -60,7 +64,7 @@ export class taskService {
     }
   }
 
-  async changeTask(update: UpdateTaskRequest) {
+  async changeTask(update: Task) {
     try {
       await pool.query(
         "UPDATE public.task SET name = $1, status = $2, importance = $3, 'dueTo' = $4 WHERE name = $1",
@@ -75,7 +79,7 @@ export class taskService {
     }
   }
 
-  async deleteTask(remove: DeleteTaskRequest) {
+  async deleteTask(remove: Task) {
     try {
       await pool.query("DELETE FROM public.task WHERE id = $1", [remove.id]);
     } catch (error: unknown) {

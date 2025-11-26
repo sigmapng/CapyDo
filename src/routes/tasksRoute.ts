@@ -1,24 +1,18 @@
 import { Hono } from "hono";
 import { jwt } from "hono/jwt";
 import { z } from "zod";
-import type { Variables } from "../index.ts";
-import { renderPage } from "../index.ts";
-import { taskService } from "../services/taskService.ts";
-import type {
-  Task,
-  CreateTaskRequest,
-  UpdateTaskRequest,
-} from "../interfaces/task.ts";
+import { renderPage, type Variables } from "../index.ts";
+import { taskService, type Task } from "../services/taskService.ts";
 
 const service = new taskService();
-export const taskRoute = new Hono<{ Variables: Variables }>();
+export const tasksRoute = new Hono<{ Variables: Variables }>();
 
 // Tasks
-taskRoute.get("/:username/tasks", async (c) => {
+tasksRoute.get("/:username/tasks", async (c) => {
   const user = c.get("user");
 
   const tasks = await service.getTasksByUserId(Number(user.id));
-  const page = await renderPage(c, "tasks.ejs", {
+  const page = await renderPage(c, "tasks/tasks.ejs", {
     title: "Tasks",
     tasks,
   });
@@ -27,24 +21,24 @@ taskRoute.get("/:username/tasks", async (c) => {
 });
 
 // Create Task
-taskRoute.get("/:username/tasks/create", async (c) => {
+tasksRoute.get("/:username/tasks/create", async (c) => {
   const user = c.get("user");
 
-  const page = await renderPage(c, "task_create.ejs", {
+  const page = await renderPage(c, "tasks/task_create.ejs", {
     title: "Create Task",
     username: user.username,
   });
   return c.html(page);
 });
 
-taskRoute.post("/:username/tasks/create", async (c) => {
+tasksRoute.post("/:username/tasks/create", async (c) => {
   const user = c.get("user");
 
   try {
     const body = await c.req.parseBody();
     const payload = c.get("jwtPayload");
 
-    const newTask: CreateTaskRequest = {
+    const newTask: Task = {
       name: String(body.name),
       status: String(body.status),
       importance: String(body.importance),
@@ -64,10 +58,10 @@ taskRoute.post("/:username/tasks/create", async (c) => {
 });
 
 //Update Task
-taskRoute.put("/:username/tasks", async (c) => {
+tasksRoute.put("/:username/tasks", async (c) => {
   const body = await c.req.parseBody();
 
-  const taskUpdated: UpdateTaskRequest = {
+  const taskUpdated: Task = {
     name: String(body.name),
     status: String(body.status),
     importance: String(body.importance),
@@ -87,13 +81,11 @@ taskRoute.put("/:username/tasks", async (c) => {
 });
 
 // Delete Task
-taskRoute.delete("/:username/tasks/:taskId", async (c) => {
+tasksRoute.delete("/:username/tasks/:taskId", async (c) => {
   try {
-    taskRoute.delete("/:username/tasks/:taskId", async (c) => {
-      const taskId = Number(c.req.param("taskId"));
-      await service.deleteTask({ id: taskId });
-      return c.json({ redirect: `/${c.get("user").username}/tasks` });
-    });
+    const taskId = Number(c.req.param("taskId"));
+    await service.deleteTask({ id: taskId });
+    return c.json({ redirect: `/${c.get("user").username}/tasks` });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return c.json({ errors: error.issues }, 400);

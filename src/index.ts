@@ -1,15 +1,14 @@
-import { Hono } from "hono";
-import type { Context } from "hono";
+import "dotenv/config";
+import { Hono, type Context } from "hono";
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { readFile } from "fs/promises";
 import ejs from "ejs";
 import path from "path";
 import { authRoute } from "./routes/authRoute.ts";
-import { userRoute } from "./routes/userRoute.ts";
-import { taskRoute } from "./routes/tasksRoute.ts";
+import { tasksRoute } from "./routes/tasksRoute.ts";
 import { secureHeaders } from "hono/secure-headers";
-import { authService } from "./services/authService.ts";
+import prisma from "./config/database.ts";
 
 export type Variables = {
   user?: any;
@@ -17,7 +16,6 @@ export type Variables = {
 };
 
 export const app = new Hono<{ Variables: Variables }>();
-const service = new authService();
 
 app.use("*", secureHeaders());
 
@@ -27,17 +25,26 @@ app.use("*", async (c, next) => {
 
   if (payload) {
     try {
-      const user = await service.getUserById(payload.userId);
-      c.set("user", user);
-      c.set("isLoggedIn", true);
-    } catch {
+      const user = await prisma.user.findUnique({
+        where: { id: payload.userId },
+      });
+
+      if (user) {
+        c.set("user", user);
+        c.set("isLoggedIn", true);
+      } else {
+        c.set("isLoggedIn", false);
+      }
+    } catch (error) {
+      console.error("Error fetching user:", error);
       c.set("isLoggedIn", false);
     }
   } else {
     c.set("isLoggedIn", false);
   }
+
   await next();
-})
+});
 
 app.use("*", serveStatic({ root: "./public" }));
 
@@ -64,17 +71,30 @@ export async function renderPage(c: Context, view: string, data: any = {}) {
 }
 
 app.route("/", authRoute);
-app.route("/", taskRoute);
+app.route("/", tasksRoute);
 
 app.get("/", async (c) => {
   const page = await renderPage(c, "index.ejs", { title: "Home" });
   return c.html(page);
 });
 
+// Graceful shutdown
+const shutdown = async () => {
+  console.log("\n Shutting down gracefully...");
+  await prisma.$disconnect();
+  process.exit(0);
+};
+
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
+
+// Start server
+const port = parseInt(process.env.PORT || "3000");
+
 serve(
   {
     fetch: app.fetch,
-    port: 3000,
+    port,
   },
   (info) => {
     console.log(`Server is running on http://localhost:${info.port}`);

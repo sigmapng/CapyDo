@@ -36,7 +36,7 @@ export const UpdateUserSchema = z.object({
 // Task validation schemas
 export const CreateTaskSchema = z.object({
   name: z.string().min(1).max(100),
-  status: z.enum(["pending", "in-progress", "completed"]),
+  status: z.enum(["not started", "in progress", "completed"]),
   importance: z.enum(["low", "medium", "high"]),
   dueTo: z.string().refine((date) => !isNaN(Date.parse(date)), {
     message: "Invalid date format",
@@ -45,7 +45,7 @@ export const CreateTaskSchema = z.object({
 
 export const UpdateTaskSchema = z.object({
   name: z.string().min(1).max(100),
-  status: z.enum(["pending", "in-progress", "completed"]),
+  status: z.enum(["not started", "in progress", "completed"]),
   importance: z.enum(["low", "medium", "high"]),
   dueTo: z.string().refine((date) => !isNaN(Date.parse(date)), {
     message: "Invalid date format",
