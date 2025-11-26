@@ -1,93 +1,81 @@
-import { pool } from "../database/client.ts";
+import prisma from "../config/database.ts";
 
 export interface Task {
-  id?: number;
-  name?: string;
-  status?: string;
-  importance?: string;
-  dueTo?: Date;
-  dateCreated?: Date;
-  userId?: number;
+  id: number;
+  name: string;
+  status: string;
+  importance: string;
+  dueTo: Date | null;
+  dateCreated: Date;
+  userId: number;
 }
 
 export class taskService {
-  async getTaskInfo(task: Task) {
+  async getTaskInfo(task: Partial<Task>) {
     try {
-      const result = await pool.query(
-        "SELECT id, name, status, importance, dueTo, dateCreated, userId FROM public.task WHERE name = $1",
-        [task.name]
-      );
-      return result.rows[0];
+      return await prisma.task.findUnique({
+        where: { id: task.id },
+      });
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error("Error caught:", error.message);
-      } else {
-        console.error("An unexpected error occurred:", error);
-      }
+      console.error("An unexpected error occurred:", error);
     }
   }
 
   async getTasksByUserId(userID: number) {
     try {
-      const result = await pool.query(
-        "SELECT id, name, status, importance, dueTo, dateCreated, userId FROM public.task WHERE userId = $1",
-        [userID]
-      );
-      return result.rows;
+      return await prisma.task.findMany({
+        where: { userId: userID },
+      });
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error("Error caught:", error.message);
-      } else {
-        console.error("An unexpected error occurred:", error);
-      }
+      console.error("An unexpected error occurred:", error);
     }
   }
 
-  async createTask(create: Task) {
+  async createTask(task: Task) {
     try {
-      await pool.query(
-        "INSERT INTO public.task (name, status, importance, dueTo, userId) VALUES ($1, $2, $3, $4, $5)",
-        [
-          create.name,
-          create.status,
-          create.importance,
-          create.dueTo,
-          create.userId,
-        ]
-      );
+      return await prisma.task.create({
+        data: {
+          id: task.id,
+          name: task.name,
+          status: task.status,
+          importance: task.importance,
+          dueTo: task.dueTo,
+          dateCreated: task.dateCreated,
+          userId: task.userId,
+        },
+      });
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error("Error caught:", error.message);
-      } else {
-        console.error("An unexpected error occurred:", error);
-      }
+      console.error("An unexpected error occurred:", error);
     }
   }
 
-  async changeTask(update: Task) {
+  async changeTask(task: Partial<Task>) {
     try {
-      await pool.query(
-        "UPDATE public.task SET name = $1, status = $2, importance = $3, 'dueTo' = $4 WHERE name = $1",
-        [update.name, update.status, update.importance, update.dueTo]
-      );
+      return await prisma.task.update({
+        where: { id: task.id },
+        data: {
+          name: task.name,
+          status: task.status,
+          importance: task.importance,
+          dueTo: task.dueTo,
+        },
+      });
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error("Error caught:", error.message);
-      } else {
-        console.error("An unexpected error occurred:", error);
-      }
+      console.error("An unexpected error occurred:", error);
     }
   }
 
-  async deleteTask(remove: Task) {
+  async deleteTask(task: Partial<Task>) {
     try {
-      await pool.query("DELETE FROM public.task WHERE id = $1", [remove.id]);
+      return await prisma.task.delete({
+        where: { id: task.id },
+        select: {
+          name: true,
+          userId: true,
+        },
+      });
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error("Error caught:", error.message);
-      } else {
-        console.error("An unexpected error occurred:", error);
-      }
+      console.error("An unexpected error occurred:", error);
     }
   }
 }
