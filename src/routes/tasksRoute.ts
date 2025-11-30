@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { jwt } from "hono/jwt";
+import prisma from "../config/database.ts";
 import { z } from "zod";
 import { renderPage, type Variables } from "../index.ts";
 import { taskService, type Task } from "../services/taskService.ts";
@@ -9,15 +10,11 @@ export const tasksRoute = new Hono<{ Variables: Variables }>();
 
 // Tasks
 tasksRoute.get("/:username/tasks", async (c) => {
-  const user = c.get("user");
-
-  const tasks = await service.getTasksByUserId(Number(user.id));
-  const page = await renderPage(c, "tasks/tasks.ejs", {
-    title: "Tasks",
-    tasks,
+  const users = await prisma.user.findMany({
+    include: { tasks: true },
   });
 
-  return c.html(page);
+  return c.json({ users });
 });
 
 // Create Task
@@ -38,15 +35,6 @@ tasksRoute.post("/:username/tasks/create", async (c) => {
     const body = await c.req.parseBody();
     const payload = c.get("jwtPayload");
 
-    const newTask: Task = {
-      name: String(body.name),
-      status: String(body.status),
-      importance: String(body.importance),
-      dueTo: new Date(String(body.dueTo)),
-      userId: Number(payload.id),
-    };
-
-    await service.createTask(newTask);
 
     return c.redirect(`/${user.username}/tasks`, 303);
   } catch (error) {
@@ -61,22 +49,7 @@ tasksRoute.post("/:username/tasks/create", async (c) => {
 tasksRoute.put("/:username/tasks", async (c) => {
   const body = await c.req.parseBody();
 
-  const taskUpdated: Task = {
-    name: String(body.name),
-    status: String(body.status),
-    importance: String(body.importance),
-    dueTo: new Date(),
-  };
-
-  const existing = await service.getTaskInfo({
-    name: taskUpdated.name,
-  } as Task);
-
-  if (taskUpdated.name?.toLowerCase !== existing.name.toLowerCase) {
-    return c.text("Task with this name doesn't exist");
-  }
-
-  await service.changeTask(taskUpdated);
+ 
   return c.redirect("/:username/tasks", 301);
 });
 

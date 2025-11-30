@@ -6,11 +6,6 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("🌱 Seeding database...");
 
-  // Очищення старих даних (опціонально)
-  await prisma.task.deleteMany();
-  await prisma.user.deleteMany();
-
-  // Створення тестових користувачів
   const hashedPassword = await bcrypt.hash("password123", 10);
 
   const user1 = await prisma.user.create({

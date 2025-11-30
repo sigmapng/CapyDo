@@ -18,10 +18,16 @@ const envSchema = z.object({
 // Валідуємо env при старті
 const parseEnv = () => {
   try {
-    return envSchema.parse(process.env);
+    const parsed = envSchema.parse(process.env);
+    console.log("Environment variables validated");
+    return parsed;
   } catch (error) {
-    console.error(" Invalid environment variables:");
-    console.error(error);
+    console.error("Invalid environment variables:");
+    if (error instanceof z.ZodError) {
+      error.issues.forEach((issue) => {
+        console.error(`  - ${issue.path.join(".")}: ${issue.message}`);
+      });
+    }
     process.exit(1);
   }
 };

@@ -22,9 +22,6 @@
 
 ## Libraries, modules, and middleware
 
-<!-- **node-postgres** - _Database connection_
-Frequent database requests can create a performance bottleneck. To reduce overhead and improve efficiency, <ins>connection pooling</ins> is used to manage and reuse database connections. Database credentials are provided through **_.env variables_** to ensure security. -->
-
 **Zod** - _Input validation_  
 When signing up or logging in, the user has to provide a "username", "password", and/or "firstname".  
 With the help of Zod, we check if the string fits the requirements.
@@ -60,8 +57,6 @@ With the help of Zod, we check if the string fits the requirements.
 </br>
 
 **bcrypt** - _Password hashing_
-
-**helmet** - _Secure headers_
 
 **JWT** - _JSON web token_
 

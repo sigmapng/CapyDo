@@ -1,14 +1,17 @@
 import "dotenv/config";
+
+import path from "path";
+import { prisma, env } from "./config/index.ts";
+import ejs from "ejs";
+import routes from "./routes/index.ts";
+
 import { Hono, type Context } from "hono";
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { readFile } from "fs/promises";
-import ejs from "ejs";
-import path from "path";
-import { authRoute } from "./routes/authRoute.ts";
-import { tasksRoute } from "./routes/tasksRoute.ts";
 import { secureHeaders } from "hono/secure-headers";
-import prisma from "./config/database.ts";
+import { cors } from "hono/cors";
+import * as jwt from "./middleware/session.ts"
 
 export type Variables = {
   user?: any;
@@ -18,6 +21,7 @@ export type Variables = {
 export const app = new Hono<{ Variables: Variables }>();
 
 app.use("*", secureHeaders());
+app.use("*", cors());
 
 // Session middleware
 app.use("*", async (c, next) => {
@@ -62,16 +66,14 @@ export async function renderPage(c: Context, view: string, data: any = {}) {
   const templateData = {
     ...data,
     isLoggedIn,
-    user,
-    username: user?.username || null,
+    username: user,
   };
 
   const body = ejs.render(bodyTemplate, templateData);
   return ejs.render(layoutTemplate, { ...templateData, body });
 }
 
-app.route("/", authRoute);
-app.route("/", tasksRoute);
+app.route("/", routes);
 
 app.get("/", async (c) => {
   const page = await renderPage(c, "index.ejs", { title: "Home" });
