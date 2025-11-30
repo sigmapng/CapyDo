@@ -1,7 +1,6 @@
-<h3>Hello <%= username %>
-</h3>
-<a href="/<%= username %>/account-settings">Update an Account </a>
-<a href="/<%= username %>/tasks">My Tasks</a>
+<h3>Hello 💚</h3>
+<a href="/account-settings">Update an Account </a>
+<a href="/tasks">My Tasks</a>
 <p>Log Out</p>
 <button id="logout-btn" onclick="logOut()">Confirm</button>
 <p>Delete Account</p>
@@ -9,7 +8,7 @@
 
 <script>
   function logOut() {
-    fetch("/<%= username %>/account", {
+    fetch("/account", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -24,7 +23,7 @@
   }
 
   function deleteAccount() {
-    fetch("/<%= username %>/account", {
+    fetch("/account", {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
