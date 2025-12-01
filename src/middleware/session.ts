@@ -1,7 +1,10 @@
 import { sign, verify } from "hono/jwt";
 import { env } from "../config/index.ts";
+import { JwtPayloadSchema, type JwtPayload } from "./validation.ts";
 
-export async function createSessionAccessToken(userId: number) {
+export async function createSessionAccessToken(
+  userId: number
+): Promise<string> {
   const accessToken = await sign(
     {
       userId,
@@ -14,7 +17,9 @@ export async function createSessionAccessToken(userId: number) {
   return accessToken;
 }
 
-export async function createRefreshAccessToken(userId: number) {
+export async function createRefreshAccessToken(
+  userId: number
+): Promise<string> {
   const refreshToken = await sign(
     {
       userId,
@@ -27,10 +32,7 @@ export async function createRefreshAccessToken(userId: number) {
   return refreshToken;
 }
 
-export async function verifyToken(token: string) {
-  try {
-    return await verify(token, env.JWT_SECRET);
-  } catch {
-    return null;
-  }
+export async function verifyToken(token: string): Promise<JwtPayload> {
+  const payload = await verify(token, env.JWT_SECRET);
+  return JwtPayloadSchema.parse(payload);
 }

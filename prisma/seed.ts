@@ -43,6 +43,7 @@ async function main() {
             name: "Write tests",
             status: "pending",
             importance: "high",
+            dueTo: new Date(),
           },
         ],
       },

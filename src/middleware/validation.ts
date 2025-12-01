@@ -1,3 +1,5 @@
+import { verify } from "hono/jwt";
+import { env } from "../config/index.ts";
 import { z } from "zod";
 
 // Parameter validation
@@ -41,6 +43,15 @@ export const TaskSchema = z.object({
     message: "Invalid date format",
   }),
 });
+
+//  JWT validation schema
+export const JwtPayloadSchema = z.object({
+  userId: z.number(),
+  type: z.enum(["access", "refresh"]),
+  exp: z.number(),
+});
+
+export type JwtPayload = z.infer<typeof JwtPayloadSchema>;
 
 // Param Functions
 export type UsernameParamData = z.infer<typeof UsernameParamSchema>;

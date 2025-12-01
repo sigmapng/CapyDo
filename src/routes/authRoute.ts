@@ -11,6 +11,13 @@ import { setCookie, getCookie, deleteCookie } from "hono/cookie";
 
 export const authRoute = new Hono<{ Variables: Variables }>();
 
+export interface User {
+  id: number;
+  firstname: string;
+  username: string;
+  password: string;
+}
+
 // Sign Up
 authRoute.get("/signup", async (c) => {
   try {
@@ -68,7 +75,7 @@ authRoute.post("/signup", async (c) => {
       expires: new Date(Math.floor(Date.now() / 1000) + 60 * 60), // 1 hour
     });
 
-    return c.redirect(`/${user.username}/account`, 303);
+    return c.redirect(`/account`, 303);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return c.json({ errors: error.issues }, 400);
@@ -119,15 +126,15 @@ authRoute.post("/login", async (c) => {
     }
 
     // Checking if user with this password and username exists
-    const user = await prisma.user.findFirstOrThrow({
-      where: {
-        username: existingUser.username,
-        password: validLoginData.password,
-      },
-    });
+    if (
+      validLoginData.username !== existingUser.username &&
+      validLoginData.password !== existingUser.password
+    ) {
+      return c.text("Incorrect password or username", 401);
+    }
 
     // Creating JWT token and cookie
-    const token = await jwt.createSessionAccessToken(user.id);
+    const token = await jwt.createSessionAccessToken(existingUser.id);
     setCookie(c, "auth-token", token, {
       path: "/",
       secure: env.NODE_ENV === "production",
@@ -136,7 +143,7 @@ authRoute.post("/login", async (c) => {
       expires: new Date(Math.floor(Date.now() / 1000) + 60 * 60), // 1 hour
     });
 
-    return c.redirect(`/${existingUser.username}/account`, 303);
+    return c.redirect(`/account`, 303);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return c.json({ errors: error.issues }, 400);
@@ -147,12 +154,11 @@ authRoute.post("/login", async (c) => {
 });
 
 // Account
-authRoute.get("/account/:username", async (c) => {
+authRoute.get("/account", async (c) => {
   try {
     const page = await renderPage(c, "user_account/account.ejs", {
       title: "Account",
     });
-
     return c.html(page);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -164,14 +170,22 @@ authRoute.get("/account/:username", async (c) => {
 });
 
 // Update Account
-authRoute.get("/:username/account-settings", async (c) => {
-  const page = await renderPage(c, "user_account/account_settings.ejs", {
-    title: "Update information",
-  });
-  return c.html(page);
+authRoute.get("/account-settings", async (c) => {
+  try {
+    const page = await renderPage(c, "user_account/account_settings.ejs", {
+      title: "Update information",
+    });
+    return c.html(page);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json({ errors: error.issues }, 400);
+    }
+    console.error("Signup error:", error);
+    return c.text("Internal server error", 500);
+  }
 });
 
-authRoute.put("/:username/account-settings", async (c) => {
+authRoute.put("/account-settings", async (c) => {
   try {
     const body = await c.req.parseBody();
 
@@ -182,7 +196,7 @@ authRoute.put("/:username/account-settings", async (c) => {
       password: body.password,
     });
 
-    const user = prisma.user.update({
+    await prisma.user.update({
       where: { id: Number(userId) },
       data: {
         firstname: validUpdateData.firstname,
@@ -190,7 +204,7 @@ authRoute.put("/:username/account-settings", async (c) => {
       },
     });
 
-    return c.redirect(`/${user}/account`, 303);
+    return c.redirect(`/account`, 303);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return c.json({ errors: error.issues }, 400);
@@ -201,7 +215,7 @@ authRoute.put("/:username/account-settings", async (c) => {
 });
 
 // Log Out
-authRoute.post("/:username/account", async (c) => {
+authRoute.post("/account", async (c) => {
   try {
     deleteCookie(c, "auth-token");
   } catch (error) {
@@ -214,7 +228,7 @@ authRoute.post("/:username/account", async (c) => {
 });
 
 // Delete User
-authRoute.delete("/:username/account", async (c) => {
+authRoute.delete("/account", async (c) => {
   try {
     const userId = getCookie(c, "auth-token");
 
